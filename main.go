@@ -8,6 +8,7 @@ import (
 )
 
 import (
+	_ "github.com/pubg/terraform-provider-bluechip/internal/services/accounts"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/cidrs"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/clusterrolebindings"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/clusters"
