@@ -56,5 +56,6 @@ Optional:
 
 Read-Only:
 
+- `attributes` (Map of String)
 - `groups` (Set of String)
 - `password` (String)
