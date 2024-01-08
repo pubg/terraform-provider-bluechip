@@ -149,8 +149,8 @@ type UserSpec struct {
 	BaseSpec `json:"-"`
 
 	Password   string            `json:"password"`
-	Groups     []string          `json:"groups"`
-	Attributes map[string]string `json:"attributes"`
+	Groups     []string          `json:"groups,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 var _ ClusterApiResource[OidcAuthSpec] = &OidcAuth{}
@@ -171,7 +171,7 @@ type OidcAuthSpec struct {
 	Issuer           string             `json:"issuer"`
 	ClientId         string             `json:"clientId"`
 	RequiredClaims   []string           `json:"requiredClaims,omitempty"`
-	GroupsClaim      string             `json:"groupsClaim"`
+	GroupsClaim      *string            `json:"groupsClaim,omitempty"`
 	GroupsPrefix     *string            `json:"groupsPrefix,omitempty"`
 	AttributeMapping []AttributeMapping `json:"attributeMapping,omitempty"`
 }

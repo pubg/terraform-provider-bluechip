@@ -23,7 +23,7 @@ func (t SpecType) Schema() *schema.Schema {
 		},
 		"groups": {
 			Type:     schema.TypeSet,
-			Required: !t.Computed,
+			Optional: !t.Computed,
 			Computed: t.Computed,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
@@ -43,7 +43,9 @@ func (t SpecType) Schema() *schema.Schema {
 func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.UserSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.Password = attr["password"].(string)
-	out.Groups = fwflex.ExpandStringSet(attr["groups"].(*schema.Set))
+	if attr["groups"] != nil {
+		out.Groups = fwflex.ExpandStringSet(attr["groups"].(*schema.Set))
+	}
 	out.Attributes = fwflex.ExpandMap(attr["attributes"].(map[string]any))
 	return nil
 }

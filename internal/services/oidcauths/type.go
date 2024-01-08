@@ -46,7 +46,7 @@ func (t SpecType) Schema() *schema.Schema {
 		},
 		"groups_claim": {
 			Type:     schema.TypeString,
-			Required: !t.Computed,
+			Optional: !t.Computed,
 			Computed: t.Computed,
 		},
 		"groups_prefix": {
@@ -91,7 +91,9 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	if attr["required_claims"] != nil {
 		out.RequiredClaims = fwflex.ExpandStringSet(attr["required_claims"].(*schema.Set))
 	}
-	out.GroupsClaim = attr["groups_claim"].(string)
+	if attr["groups_claim"] != nil {
+		out.GroupsClaim = fwtype.String(attr["groups_claim"].(string))
+	}
 	if attr["groups_prefix"] != nil {
 		out.GroupsPrefix = fwtype.String(attr["groups_prefix"].(string))
 	}
