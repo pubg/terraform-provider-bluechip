@@ -11,14 +11,14 @@ import (
 type SpecType struct {
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	return nil
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.EmptySpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.EmptySpec) diag.Diagnostics {
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.EmptySpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.EmptySpec) map[string]any {
 	return nil
 }

@@ -12,95 +12,96 @@ import (
 )
 
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"project": {
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Type:     schema.TypeString,
 		},
 		"environment": {
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Type:     schema.TypeString,
 		},
 		"organization_unit": {
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Type:     schema.TypeString,
 		},
 		"platform": {
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Type:     schema.TypeString,
 		},
 		"pubg": fwtype.SingleNestedBlock(map[string]*schema.Schema{
 			"infra": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"site": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
-		}, computed, true),
+		}, t.Computed, true),
 		"vendor": fwtype.SingleNestedBlock(map[string]*schema.Schema{
 			"name": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"account_id": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"engine": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"region": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
-		}, computed, false),
+		}, t.Computed, false),
 		"kubernetes": fwtype.SingleNestedBlock(map[string]*schema.Schema{
 			"endpoint": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"ca_cert": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
 			"sa_issuer": {
-				Required:     !computed,
-				Computed:     computed,
+				Required:     !t.Computed,
+				Computed:     t.Computed,
 				Type:         schema.TypeString,
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"version": {
-				Required: !computed,
-				Computed: computed,
+				Required: !t.Computed,
+				Computed: t.Computed,
 				Type:     schema.TypeString,
 			},
-		}, computed, false),
+		}, t.Computed, false),
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ClusterSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ClusterSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.Project = attr["project"].(string)
 	out.Environment = attr["environment"].(string)
@@ -133,7 +134,7 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.ClusterSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.ClusterSpec) map[string]any {
 	attr := map[string]any{}
 	attr["project"] = in.Project
 	attr["environment"] = in.Environment
@@ -161,8 +162,5 @@ func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip
 		"version":   in.Kubernetes.Version,
 	})}
 
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

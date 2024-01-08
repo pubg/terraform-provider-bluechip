@@ -25,7 +25,7 @@ type NamespacedResourceClient[T bluechip_models.NamespacedApiResource[P], P blue
 
 func (c *NamespacedResourceClient[T, P]) Get(ctx context.Context, namespace string, name string) (T, error) {
 	var data T
-	req, err := http.NewRequest("GET", c.JoinUrl(c.gvk.ToApiPath(), namespace, name), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", c.JoinUrl(c.gvk.ToApiPath(), namespace, name), nil)
 	if err != nil {
 		return data, err
 	}
@@ -58,7 +58,7 @@ func (c *NamespacedResourceClient[T, P]) Upsert(ctx context.Context, namespace s
 }
 
 func (c *NamespacedResourceClient[T, P]) Delete(ctx context.Context, namespace string, name string) error {
-	req, err := http.NewRequest("DELETE", c.JoinUrl(c.gvk.ToApiPath(), namespace, name), nil)
+	req, err := http.NewRequestWithContext(ctx, "DELETE", c.JoinUrl(c.gvk.ToApiPath(), namespace, name), nil)
 	if err != nil {
 		return err
 	}
@@ -75,9 +75,64 @@ func (c *NamespacedResourceClient[T, P]) Delete(ctx context.Context, namespace s
 }
 
 func (c *NamespacedResourceClient[T, P]) List(ctx context.Context, namespace string) ([]T, error) {
-	panic("implement me")
+	var nextToken *string
+	var items []T
+
+	for {
+		req, err := http.NewRequestWithContext(ctx, "GET", c.JoinUrl(c.gvk.ToApiPath(), namespace), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		if nextToken != nil {
+			q := req.URL.Query()
+			q.Add("nextToken", *nextToken)
+			req.URL.RawQuery = q.Encode()
+		}
+		var data bluechip_models.ListResponseImpl[T]
+		_, err = c.DoWithType(req, &data)
+
+		items = append(items, data.Items...)
+		nextToken = data.Metadata.NextToken
+
+		if nextToken == nil {
+			break
+		}
+	}
+
+	return items, nil
 }
 
-func (c *NamespacedResourceClient[T, P]) Search(ctx context.Context, namespace string, query any) {
-	panic("implement me")
+func (c *NamespacedResourceClient[T, P]) Search(ctx context.Context, namespace string, query []bluechip_models.QueryTerm) ([]T, error) {
+	var items []T
+
+	listRequest := &bluechip_models.ListRequest{Items: query}
+
+	for {
+		reqBuf, err := json.Marshal(listRequest)
+		if err != nil {
+			return nil, err
+		}
+		reqStream := bytes.NewBuffer(reqBuf)
+
+		req, err := http.NewRequestWithContext(ctx, "POST", c.JoinUrl(c.gvk.ToApiPath(), namespace, "search"), reqStream)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Add("Content-Type", "application/json")
+
+		var data bluechip_models.ListResponseImpl[T]
+		_, err = c.DoWithType(req, &data)
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, data.Items...)
+		listRequest.NextToken = data.Metadata.NextToken
+
+		if listRequest.NextToken == nil {
+			break
+		}
+	}
+	return items, nil
 }

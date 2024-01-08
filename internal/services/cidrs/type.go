@@ -12,14 +12,15 @@ import (
 )
 
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"ipv4_cidrs": {
 			Type:     schema.TypeSet,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
 				ValidateFunc: validation.IsCIDR,
@@ -27,8 +28,8 @@ func (SpecType) Schema(computed bool) *schema.Schema {
 		},
 		"ipv6_cidrs": {
 			Type:     schema.TypeSet,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 			Elem: &schema.Schema{
 				Type:         schema.TypeString,
 				ValidateFunc: validation.IsCIDR,
@@ -36,26 +37,22 @@ func (SpecType) Schema(computed bool) *schema.Schema {
 		},
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.CidrSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.CidrSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.Ipv4Cidrs = fwflex.ExpandStringSet(attr["ipv4_cidrs"].(*schema.Set))
 	out.Ipv6Cidrs = fwflex.ExpandStringSet(attr["ipv6_cidrs"].(*schema.Set))
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.CidrSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.CidrSpec) map[string]any {
 	attr := map[string]any{
 		"ipv4_cidrs": in.Ipv4Cidrs,
 		"ipv6_cidrs": in.Ipv6Cidrs,
 	}
-
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

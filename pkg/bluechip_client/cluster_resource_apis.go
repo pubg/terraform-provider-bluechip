@@ -73,10 +73,65 @@ func (c *ClusterResourceClient[T, P]) Delete(ctx context.Context, name string) e
 	return nil
 }
 
-func (c *ClusterResourceClient[T, P]) List(ctx context.Context) {
-	panic("implement me")
+func (c *ClusterResourceClient[T, P]) List(ctx context.Context) ([]T, error) {
+	var nextToken *string
+	var items []T
+
+	for {
+		req, err := http.NewRequestWithContext(ctx, "GET", c.JoinUrl(c.gvk.ToApiPath()), nil)
+		if err != nil {
+			return nil, err
+		}
+		req.Header.Add("Content-Type", "application/json")
+
+		var data bluechip_models.ListResponseImpl[T]
+		_, err = c.DoWithType(req, &data)
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, data.Items...)
+		nextToken = data.Metadata.NextToken
+
+		if nextToken == nil {
+			break
+		}
+	}
+
+	return items, nil
 }
 
-func (c *ClusterResourceClient[T, P]) Search(ctx context.Context, query any) {
-	panic("implement me")
+func (c *ClusterResourceClient[T, P]) Search(ctx context.Context, query []bluechip_models.QueryTerm) ([]T, error) {
+	var items []T
+
+	listRequest := &bluechip_models.ListRequest{Items: query}
+
+	for {
+		reqBuf, err := json.Marshal(listRequest)
+		if err != nil {
+			return nil, err
+		}
+		reqStream := bytes.NewBuffer(reqBuf)
+
+		req, err := http.NewRequestWithContext(ctx, "POST", c.JoinUrl(c.gvk.ToApiPath(), "search"), reqStream)
+		if err != nil {
+			return nil, err
+		}
+
+		if listRequest.NextToken != nil {
+			q := req.URL.Query()
+			q.Add("nextToken", *listRequest.NextToken)
+			req.URL.RawQuery = q.Encode()
+		}
+		var data bluechip_models.ListResponseImpl[T]
+		_, err = c.DoWithType(req, &data)
+
+		items = append(items, data.Items...)
+		listRequest.NextToken = data.Metadata.NextToken
+
+		if listRequest.NextToken == nil {
+			break
+		}
+	}
+	return items, nil
 }

@@ -10,16 +10,17 @@ import (
 )
 
 type SpecType struct {
+	RbType fwtype.RoleBindingType
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
-	return fwtype.RoleBindingTyp.Schema(computed)
+func (t SpecType) Schema() *schema.Schema {
+	return t.RbType.Schema()
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.RoleBindingSpec) diag.Diagnostics {
-	return fwtype.RoleBindingTyp.Expand(ctx, d, out)
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.RoleBindingSpec) diag.Diagnostics {
+	return t.RbType.Expand(ctx, d, out)
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.RoleBindingSpec) diag.Diagnostics {
-	return fwtype.RoleBindingTyp.Flatten(ctx, d, in)
+func (t SpecType) Flatten(in bluechip_models.RoleBindingSpec) map[string]any {
+	return t.RbType.Flatten(in)
 }

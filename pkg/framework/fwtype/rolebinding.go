@@ -9,65 +9,66 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 )
 
-var RoleBindingTyp = &RoleBindingType{}
+var _ TypeHelper[bluechip_models.RoleBindingSpec] = &RoleBindingType{}
 
 type RoleBindingType struct {
+	Computed bool
 }
 
-func (RoleBindingType) Schema(computed bool) *schema.Schema {
+func (t RoleBindingType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"subject_ref": SingleNestedBlock(map[string]*schema.Schema{
 			"kind": {
 				Type:        schema.TypeString,
 				Description: "Kind of the referent. Valid kinds are 'User', 'Group'.",
-				Required:    !computed,
-				Computed:    computed,
+				Required:    !t.Computed,
+				Computed:    t.Computed,
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "Name of the referent.",
-				Required:    !computed,
-				Computed:    computed,
+				Required:    !t.Computed,
+				Computed:    t.Computed,
 			},
-		}, computed, true),
+		}, t.Computed, true),
 		"policy_inline": {
 			Type:     schema.TypeList,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"actions": {
 						Type:        schema.TypeSet,
 						Description: "Actions is a list of actions this role binding grants access to.",
-						Required:    !computed,
-						Computed:    computed,
+						Required:    !t.Computed,
+						Computed:    t.Computed,
 						Elem:        &schema.Schema{Type: schema.TypeString},
 					},
 					"paths": {
 						Type:        schema.TypeSet,
 						Description: "Paths is a list of paths this role binding grants access to.",
-						Required:    !computed,
-						Computed:    computed,
+						Required:    !t.Computed,
+						Computed:    t.Computed,
 						Elem:        &schema.Schema{Type: schema.TypeString},
 					},
 					"resources": {
 						Type:        schema.TypeSet,
 						Description: "Resources is a list of resources this role binding grants access to.",
-						Required:    !computed,
-						Computed:    computed,
+						Required:    !t.Computed,
+						Computed:    t.Computed,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"api_group": {
 									Type:        schema.TypeString,
 									Description: "APIGroup is the group for the resource being referenced.",
-									Required:    !computed,
-									Computed:    computed,
+									Required:    !t.Computed,
+									Computed:    t.Computed,
 								},
 								"kind": {
 									Type:        schema.TypeString,
 									Description: "Kind is the type of resource being referenced.",
-									Required:    !computed,
-									Computed:    computed,
+									Required:    !t.Computed,
+									Computed:    t.Computed,
 								},
 							},
 						},
@@ -77,12 +78,12 @@ func (RoleBindingType) Schema(computed bool) *schema.Schema {
 		},
 		"policy_ref": {
 			Type:     schema.TypeString,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 		},
 	}
 
-	blockSchema := SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := SingleNestedBlock(innerSchema, t.Computed, true)
 	CleanForDataSource(blockSchema)
 	return blockSchema
 }
@@ -120,7 +121,7 @@ func (RoleBindingType) Expand(ctx context.Context, d *schema.ResourceData, out *
 	return nil
 }
 
-func (RoleBindingType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.RoleBindingSpec) diag.Diagnostics {
+func (RoleBindingType) Flatten(in bluechip_models.RoleBindingSpec) map[string]any {
 	attr := map[string]any{
 		"subject_ref": []map[string]any{{
 			"kind": in.SubjectsRef.Kind,
@@ -145,9 +146,5 @@ func (RoleBindingType) Flatten(ctx context.Context, d *schema.ResourceData, in b
 		}
 		attr["policy_inline"] = append(attr["policy_inline"].([]map[string]any), rawPolicyInline)
 	}
-
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

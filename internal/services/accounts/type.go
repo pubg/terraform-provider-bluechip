@@ -10,50 +10,53 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
+var _ fwtype.TypeHelper[bluechip_models.AccountSpec] = &SpecType{}
+
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"account_id": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"display_name": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"description": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"alias": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"vendor": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"regions": {
 			Type:     schema.TypeSet,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.AccountSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.AccountSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.AccountId = attr["account_id"].(string)
 	out.DisplayName = attr["display_name"].(string)
@@ -64,7 +67,7 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.AccountSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.AccountSpec) map[string]any {
 	attr := map[string]any{
 		"account_id":   in.AccountId,
 		"display_name": in.DisplayName,
@@ -73,9 +76,5 @@ func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip
 		"vendor":       in.Vendor,
 		"regions":      in.Regions,
 	}
-
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

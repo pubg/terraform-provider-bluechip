@@ -11,35 +11,36 @@ import (
 )
 
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"password": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"groups": {
 			Type:     schema.TypeSet,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"attributes": {
 			Type:     schema.TypeMap,
 			Optional: true,
-			Computed: computed,
+			Computed: t.Computed,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.UserSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.UserSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.Password = attr["password"].(string)
 	out.Groups = fwflex.ExpandStringSet(attr["groups"].(*schema.Set))
@@ -47,15 +48,12 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.UserSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.UserSpec) map[string]any {
 	attr := map[string]any{
 		"password":   in.Password,
 		"groups":     in.Groups,
 		"attributes": in.Attributes,
 	}
 
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

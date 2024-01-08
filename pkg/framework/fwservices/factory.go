@@ -12,8 +12,6 @@ type ResourceFactory interface {
 	Resource() *schema.Resource
 }
 
-var metadataTyp = &fwtype.MetadataType{}
-
 func NamespacedResourceIdentity(namespace, name string) string {
 	return fmt.Sprintf("%s/%s", namespace, name)
 }
@@ -30,3 +28,11 @@ func ClusterResourceIdentity(name string) string {
 func ClusterResourceIdentityFrom(id string) string {
 	return id
 }
+
+var NamespacedResourceMetadataType = fwtype.NewMetadataType(true, false)
+var NamespacedDataSourceMetadataType = fwtype.NewMetadataType(true, true)
+var NamespacedDataSourcesMetadataType = fwtype.NewMetadataType(true, true)
+
+var ClusterResourceMetadataType = fwtype.NewMetadataType(false, false)
+var ClusterDataSourceMetadataType = fwtype.NewMetadataType(false, true)
+var ClusterDataSourcesMetadataType = fwtype.NewMetadataType(false, true)

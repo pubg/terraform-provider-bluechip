@@ -11,22 +11,26 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/internal/provider"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
+	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type NamespacedTerraformResource[T bluechip_models.NamespacedApiResource[P], P bluechip_models.BaseSpec] struct {
-	Schema        map[string]*schema.Schema
-	Timeout       time.Duration
-	Gvk           bluechip_models.GroupVersionKind
-	SpecExpander  fwflex.Expander[P]
-	SpecFlattener fwflex.Flattener[P]
-	Constructor   func() T
+	Schema      map[string]*schema.Schema
+	Timeout     time.Duration
+	Gvk         bluechip_models.GroupVersionKind
+	Constructor func() T
+
+	MetadataType fwtype.TypeHelper[bluechip_models.Metadata]
+	SpecType     fwtype.TypeHelper[P]
 }
 
 func (r *NamespacedTerraformResource[T, P]) Resource() *schema.Resource {
 	return &schema.Resource{
-		Schema: r.Schema,
+		Schema: map[string]*schema.Schema{
+			"metadata": r.MetadataType.Schema(),
+			"spec":     r.SpecType.Schema(),
+		},
 		CreateContext: func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 			return r.Upsert(ctx, data, r.namespacedClient(meta))
 		},
@@ -52,7 +56,7 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 	ctx = tflog.SetField(ctx, "gvk", r.Gvk)
 
 	var metadata bluechip_models.Metadata
-	if diags := metadataTyp.Expand(ctx, d, &metadata); diags.HasError() {
+	if diags := r.MetadataType.Expand(ctx, d, &metadata); diags.HasError() {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "metadata Expansion Failed",
@@ -64,7 +68,7 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 	}
 
 	var spec P
-	if diags := r.SpecExpander(ctx, d, &spec); diags.HasError() {
+	if diags := r.SpecType.Expand(ctx, d, &spec); diags.HasError() {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "spec Expansion Failed",
@@ -83,10 +87,9 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 	object.SetSpec(spec)
 	if err := client.Upsert(ctx, metadata.Namespace, object); err != nil {
 		diags := append(diag.FromErr(err), diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Upsert Request Failed",
-			Detail:        "Upsert Request Failed",
-			AttributePath: cty.GetAttrPath("spec.0"),
+			Severity: diag.Error,
+			Summary:  "Upsert Request Failed",
+			Detail:   "Upsert Request Failed",
 		})
 		tflog.Info(ctx, "Upsert Request Failed", fwlog.Field("object", object), fwlog.Field("diags", diags))
 		return diags
@@ -109,25 +112,10 @@ func (r *NamespacedTerraformResource[T, P]) Read(ctx context.Context, d *schema.
 		return diags
 	}
 
-	if diags := metadataTyp.Flatten(ctx, d, object.GetMetadata()); diags.HasError() {
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "metadata Flatten Failed",
-			Detail:        "metadata Flatten Failed",
-			AttributePath: cty.GetAttrPath("metadata.0"),
-		})
-		tflog.Info(ctx, "metadata Flatten Failed", fwlog.Field("diags", diags))
+	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(object.GetMetadata())); diags.HasError() {
 		return diags
 	}
-
-	if diags := r.SpecFlattener(ctx, d, object.GetSpec()); diags.HasError() {
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "spec Flatten Failed",
-			Detail:        "spec Flatten Failed",
-			AttributePath: cty.GetAttrPath("spec.0"),
-		})
-		tflog.Info(ctx, "spec Flatten Failed", fwlog.Field("diags", diags))
+	if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(object.GetSpec())); diags.HasError() {
 		return diags
 	}
 

@@ -10,3 +10,10 @@ type Metadata struct {
 	Annotations       map[string]string `json:"annotations,omitempty"`
 	Namespace         string            `json:"namespace,omitempty"`
 }
+
+type ListMetadata struct {
+	BaseMetadata `json:"-"`
+
+	*TypeMeta `json:",inline"`
+	NextToken *string `json:"nextToken,omitempty"`
+}

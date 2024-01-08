@@ -11,75 +11,76 @@ import (
 )
 
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"username_claim": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"username_prefix": {
 			Type:     schema.TypeString,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 		},
 		"issuer": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"client_id": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"required_claims": {
 			Type:     schema.TypeSet,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 		},
 		"groups_claim": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"groups_prefix": {
 			Type:     schema.TypeString,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 		},
 		"attribute_mapping": {
 			Type:     schema.TypeList,
-			Optional: !computed,
-			Computed: computed,
+			Optional: !t.Computed,
+			Computed: t.Computed,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"from": {
 						Type:     schema.TypeString,
-						Required: !computed,
-						Computed: computed,
+						Required: !t.Computed,
+						Computed: t.Computed,
 					},
 					"to": {
 						Type:     schema.TypeString,
-						Required: !computed,
-						Computed: computed,
+						Required: !t.Computed,
+						Computed: t.Computed,
 					},
 				},
 			},
 		},
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.OidcAuthSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.OidcAuthSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.UsernameClaim = attr["username_claim"].(string)
 	if attr["username_prefix"] != nil {
@@ -106,7 +107,7 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.OidcAuthSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.OidcAuthSpec) map[string]any {
 	attr := map[string]any{
 		"username_claim":    in.UsernameClaim,
 		"username_prefix":   in.UsernamePrefix,
@@ -118,8 +119,5 @@ func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip
 		"attribute_mapping": in.AttributeMapping,
 	}
 
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

@@ -10,16 +10,16 @@ import (
 )
 
 type SpecType struct {
+	RbType fwtype.RoleBindingType
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
-	return fwtype.RoleBindingTyp.Schema(computed)
+func (t SpecType) Schema() *schema.Schema {
+	return t.RbType.Schema()
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ClusterRoleBindingSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ClusterRoleBindingSpec) diag.Diagnostics {
 	var rb bluechip_models.RoleBindingSpec
-	diags := fwtype.RoleBindingTyp.Expand(ctx, d, &rb)
-	if diags.HasError() {
+	if diags := t.RbType.Expand(ctx, d, &rb); diags.HasError() {
 		return diags
 	}
 
@@ -29,15 +29,11 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.ClusterRoleBindingSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.ClusterRoleBindingSpec) map[string]any {
 	var rb bluechip_models.RoleBindingSpec
 	rb.SubjectsRef = in.SubjectsRef
 	rb.PolicyInline = in.PolicyInline
 	rb.PolicyRef = in.PolicyRef
 
-	diags := fwtype.RoleBindingTyp.Flatten(ctx, d, rb)
-	if diags.HasError() {
-		return diags
-	}
-	return nil
+	return t.RbType.Flatten(rb)
 }

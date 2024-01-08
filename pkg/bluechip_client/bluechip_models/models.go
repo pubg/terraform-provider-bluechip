@@ -38,6 +38,17 @@ type NamespacedApiResource[Spec BaseSpec] interface {
 	SetSpec(s Spec)
 }
 
+type ListResponse[Item BaseResponse] interface {
+	BaseResponse
+
+	GetApiVersion() string
+	SetApiVersion(apiVersion string)
+	GetKind() string
+	SetKind(kind string)
+	GetMetadata() ListMetadata
+	GetItems() []Item
+}
+
 type EmptySpec struct {
 	BaseSpec
 }

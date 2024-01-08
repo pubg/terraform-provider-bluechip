@@ -10,48 +10,49 @@ import (
 )
 
 type SpecType struct {
+	Computed bool
 }
 
-func (SpecType) Schema(computed bool) *schema.Schema {
+func (t SpecType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"app": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"timestamp": {
 			Type:     schema.TypeInt,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"commit_hash": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"repository": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"tag": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 		"branch": {
 			Type:     schema.TypeString,
-			Required: !computed,
-			Computed: computed,
+			Required: !t.Computed,
+			Computed: t.Computed,
 		},
 	}
 
-	blockSchema := fwtype.SingleNestedBlock(innerSchema, computed, true)
+	blockSchema := fwtype.SingleNestedBlock(innerSchema, t.Computed, true)
 	fwtype.CleanForDataSource(blockSchema)
 	return blockSchema
 }
 
-func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ImageSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ImageSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.App = attr["app"].(string)
 	out.Timestamp = attr["timestamp"].(int)
@@ -62,7 +63,7 @@ func (SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechi
 	return nil
 }
 
-func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.ImageSpec) diag.Diagnostics {
+func (t SpecType) Flatten(in bluechip_models.ImageSpec) map[string]any {
 	attr := map[string]any{
 		"app":         in.App,
 		"timestamp":   in.Timestamp,
@@ -72,8 +73,5 @@ func (SpecType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip
 		"branch":      in.Branch,
 	}
 
-	if err := d.Set("spec", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

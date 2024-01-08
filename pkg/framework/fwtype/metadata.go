@@ -9,25 +9,31 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 )
 
-var MetadataTyp = &MetadataType{}
+var _ TypeHelper[bluechip_models.Metadata] = &MetadataType{}
 
 type MetadataType struct {
+	Namespaced bool
+	Computed   bool
 }
 
-func (MetadataType) Schema(namespaced bool, computed bool) *schema.Schema {
+func NewMetadataType(namespaced bool, computed bool) *MetadataType {
+	return &MetadataType{Namespaced: namespaced, Computed: computed}
+}
+
+func (t MetadataType) Schema() *schema.Schema {
 	innerSchema := map[string]*schema.Schema{
 		"annotations": {
 			Type:        schema.TypeMap,
 			Elem:        schema.TypeString,
 			Description: "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.",
-			Computed:    computed,
+			Computed:    t.Computed,
 			Optional:    true,
 		},
 		"labels": {
 			Type:        schema.TypeMap,
 			Elem:        schema.TypeString,
 			Description: "Labels are key value pairs that may be used to scope and select individual resources. They are not queryable and should be preserved when modifying objects.",
-			Computed:    computed,
+			Computed:    t.Computed,
 			Optional:    true,
 		},
 		"name": {
@@ -47,7 +53,7 @@ func (MetadataType) Schema(namespaced bool, computed bool) *schema.Schema {
 		},
 	}
 
-	if namespaced {
+	if t.Namespaced {
 		innerSchema["namespace"] = &schema.Schema{
 			Type:        schema.TypeString,
 			Description: "Namespace is the namespace of the resource.",
@@ -55,8 +61,8 @@ func (MetadataType) Schema(namespaced bool, computed bool) *schema.Schema {
 		}
 	}
 
-	blockSchema := SingleNestedBlock(innerSchema, computed, false)
-	blockSchema.Optional = computed
+	blockSchema := SingleNestedBlock(innerSchema, t.Computed, false)
+	blockSchema.Optional = t.Computed
 	CleanForDataSource(blockSchema)
 	return blockSchema
 }
@@ -86,7 +92,7 @@ func (MetadataType) Expand(ctx context.Context, d *schema.ResourceData, out *blu
 	return nil
 }
 
-func (MetadataType) Flatten(ctx context.Context, d *schema.ResourceData, in bluechip_models.Metadata) diag.Diagnostics {
+func (MetadataType) Flatten(in bluechip_models.Metadata) map[string]any {
 	attr := map[string]any{}
 	attr["name"] = in.Name
 	if in.Namespace != "" {
@@ -100,8 +106,5 @@ func (MetadataType) Flatten(ctx context.Context, d *schema.ResourceData, in blue
 	if in.UpdateTimestamp != "" {
 		attr["update_timestamp"] = in.UpdateTimestamp
 	}
-	if err := d.Set("metadata", []map[string]any{attr}); err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return attr
 }

@@ -9,20 +9,28 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/internal/provider"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
+	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type ClusterTerraformDataSource[T bluechip_models.ClusterApiResource[P], P bluechip_models.BaseSpec] struct {
-	Schema        map[string]*schema.Schema
-	Timeout       time.Duration
-	Gvk           bluechip_models.GroupVersionKind
-	SpecExpander  fwflex.Expander[P]
-	SpecFlattener fwflex.Flattener[P]
+	Timeout time.Duration
+	Gvk     bluechip_models.GroupVersionKind
+
+	MetadataType fwtype.TypeHelper[bluechip_models.Metadata]
+	SpecType     fwtype.TypeHelper[P]
 }
 
 func (r *ClusterTerraformDataSource[T, P]) Resource() *schema.Resource {
+	scheme := map[string]*schema.Schema{
+		"metadata": r.MetadataType.Schema(),
+	}
+
+	if specSchema := r.SpecType.Schema(); specSchema != nil {
+		scheme["spec"] = specSchema
+	}
+
 	return &schema.Resource{
-		Schema: r.Schema,
+		Schema: scheme,
 		ReadContext: func(ctx context.Context, data *schema.ResourceData, meta interface{}) diag.Diagnostics {
 			return r.Read(ctx, data, r.clusterWideClient(meta))
 		},
@@ -34,8 +42,7 @@ func (r *ClusterTerraformDataSource[T, P]) Resource() *schema.Resource {
 
 func (r *ClusterTerraformDataSource[T, P]) Read(ctx context.Context, d *schema.ResourceData, client *bluechip_client.ClusterResourceClient[T, P]) diag.Diagnostics {
 	var metadata bluechip_models.Metadata
-	diags := metadataTyp.Expand(ctx, d, &metadata)
-	if diags.HasError() {
+	if diags := r.MetadataType.Expand(ctx, d, &metadata); diags.HasError() {
 		return diags
 	}
 
@@ -46,11 +53,10 @@ func (r *ClusterTerraformDataSource[T, P]) Read(ctx context.Context, d *schema.R
 
 	d.SetId(ClusterResourceIdentity(metadata.Name))
 
-	if diags := metadataTyp.Flatten(ctx, d, object.GetMetadata()); diags.HasError() {
+	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(object.GetMetadata())); diags.HasError() {
 		return diags
 	}
-
-	if diags := r.SpecFlattener(ctx, d, object.GetSpec()); diags.HasError() {
+	if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(object.GetSpec())); diags.HasError() {
 		return diags
 	}
 
