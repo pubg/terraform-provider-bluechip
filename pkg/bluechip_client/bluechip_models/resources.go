@@ -223,9 +223,9 @@ type SubjectRef struct {
 }
 
 type PolicyStatement struct {
-	Actions   []string `json:"actions"`
-	Paths     []string
-	Resources []PolicyResource `json:"resources"`
+	Actions   []string         `json:"actions"`
+	Paths     []string         `json:"paths,omitempty"`
+	Resources []PolicyResource `json:"resources,omitempty"`
 }
 
 type PolicyResource struct {
