@@ -81,7 +81,7 @@ func (c *Client) DoWithType(req *http.Request, t any) (*http.Response, error) {
 	return resp, nil
 }
 
-func readBodyForError(resp *http.Response) []byte {
+func ReadBodyForError(resp *http.Response) []byte {
 	if resp == nil {
 		return nil
 	}

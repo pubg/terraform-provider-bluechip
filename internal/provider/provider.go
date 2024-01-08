@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_authenticator"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
@@ -19,9 +20,10 @@ func Provider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_ADDRESS", ""),
+				Type:         schema.TypeString,
+				Required:     true,
+				DefaultFunc:  schema.EnvDefaultFunc("BLUECHIP_ADDRESS", ""),
+				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
 			"token": {
 				Type:        schema.TypeString,

@@ -47,7 +47,7 @@ func (c *NamespacedResourceClient[T, P]) Upsert(ctx context.Context, namespace s
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.Do(req)
-	body := readBodyForError(resp)
+	body := ReadBodyForError(resp)
 	if err != nil {
 		return fmt.Errorf("http request failed: %w, body: %s", err, body)
 	}
@@ -64,7 +64,7 @@ func (c *NamespacedResourceClient[T, P]) Delete(ctx context.Context, namespace s
 	}
 
 	resp, err := c.Do(req)
-	body := readBodyForError(resp)
+	body := ReadBodyForError(resp)
 	if err != nil {
 		return fmt.Errorf("http request failed: %w, body: %s", err, body)
 	}

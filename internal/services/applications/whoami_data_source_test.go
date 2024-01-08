@@ -28,3 +28,30 @@ const TestAccWhoAmiDataSourceConfig = `
 data "bluechip_whoami" "current" {
 }
 `
+
+func TestProviderOidc(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testacc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: testacc.TestAccProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccProviderOidcConfig + "\n" + TestAccWhoAmiDataSourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "id", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "name", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system-admin"),
+				),
+			},
+		},
+	})
+}
+
+const TestAccProviderOidcConfig = `
+provider "bluechip" {
+  address = "" 
+  oidc_auth {
+    validator_name = "gitlab"
+	token = "asdf"
+  }
+}
+`

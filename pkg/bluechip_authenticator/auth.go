@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
+	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
 )
 
 type Client struct {
@@ -31,7 +33,10 @@ func (c *Client) doLogin(req *http.Request) (*LoginResponse, *http.Response, err
 		return nil, nil, err
 	}
 	if resp.StatusCode/100 != 2 {
-		return nil, resp, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		bodyBuf := bluechip_client.ReadBodyForError(resp)
+
+		tflog.Debug(context.Background(), "Login failed", fwlog.Field("status_code", resp.StatusCode), fwlog.Field("body", string(bodyBuf)), fwlog.Field("request", req))
+		return nil, resp, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bodyBuf))
 	}
 
 	var loginResponse LoginResponse

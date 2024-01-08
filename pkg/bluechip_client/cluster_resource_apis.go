@@ -46,7 +46,7 @@ func (c *ClusterResourceClient[T, P]) Upsert(ctx context.Context, data T) error 
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := c.Do(req)
-	body := readBodyForError(resp)
+	body := ReadBodyForError(resp)
 	if err != nil {
 		return fmt.Errorf("http request failed: %w, body: %s", err, body)
 	}
@@ -63,7 +63,7 @@ func (c *ClusterResourceClient[T, P]) Delete(ctx context.Context, name string) e
 	}
 
 	resp, err := c.Do(req)
-	body := readBodyForError(resp)
+	body := ReadBodyForError(resp)
 	if err != nil {
 		return fmt.Errorf("http request failed: %w, body: %s", err, body)
 	}
