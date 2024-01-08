@@ -63,12 +63,12 @@ Read-Only:
 
 Required:
 
-- `groups` (Set of String)
 - `password` (String)
 
 Optional:
 
 - `attributes` (Map of String)
+- `groups` (Set of String)
 
 
 <a id="nestedblock--timeouts"></a>

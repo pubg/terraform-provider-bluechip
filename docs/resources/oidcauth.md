@@ -69,13 +69,13 @@ Read-Only:
 Required:
 
 - `client_id` (String)
-- `groups_claim` (String)
 - `issuer` (String)
 - `username_claim` (String)
 
 Optional:
 
 - `attribute_mapping` (Block List) (see [below for nested schema](#nestedblock--spec--attribute_mapping))
+- `groups_claim` (String)
 - `groups_prefix` (String)
 - `required_claims` (Set of String)
 - `username_prefix` (String)

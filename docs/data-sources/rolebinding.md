@@ -77,7 +77,7 @@ Read-Only:
 
 - `actions` (Set of String)
 - `paths` (Set of String)
-- `resources` (Set of Object) (see [below for nested schema](#nestedobjatt--spec--policy_inline--resources))
+- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--spec--policy_inline--resources))
 
 <a id="nestedobjatt--spec--policy_inline--resources"></a>
 ### Nested Schema for `spec.policy_inline.resources`

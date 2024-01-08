@@ -88,8 +88,11 @@ Required:
 Required:
 
 - `actions` (Set of String) Actions is a list of actions this role binding grants access to.
+
+Optional:
+
 - `paths` (Set of String) Paths is a list of paths this role binding grants access to.
-- `resources` (Block Set, Min: 1) Resources is a list of resources this role binding grants access to. (see [below for nested schema](#nestedblock--spec--policy_inline--resources))
+- `resources` (Block List) Resources is a list of resources this role binding grants access to. (see [below for nested schema](#nestedblock--spec--policy_inline--resources))
 
 <a id="nestedblock--spec--policy_inline--resources"></a>
 ### Nested Schema for `spec.policy_inline.resources`
