@@ -78,7 +78,7 @@ func Provider() *schema.Provider {
 						},
 						"region": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"profile": {
 							Type:     schema.TypeString,
@@ -162,7 +162,7 @@ type ProviderConfig struct {
 		AccessKey       *string
 		SecretAccessKey *string
 		SessionToken    *string
-		Region          string
+		Region          *string
 		Profile         *string
 	}
 	OidcAuth *struct {
@@ -197,11 +197,10 @@ func loadProviderConfiguration(d *schema.ResourceData) ProviderConfig {
 			AccessKey       *string
 			SecretAccessKey *string
 			SessionToken    *string
-			Region          string
+			Region          *string
 			Profile         *string
 		}{
 			ClusterName: attr["cluster_name"].(string),
-			Region:      attr["region"].(string),
 		}
 		if attr["access_key"] != nil {
 			config.AwsAuth.AccessKey = fwtype.String(attr["access_key"].(string))
@@ -211,6 +210,9 @@ func loadProviderConfiguration(d *schema.ResourceData) ProviderConfig {
 		}
 		if attr["session_token"] != nil {
 			config.AwsAuth.SessionToken = fwtype.String(attr["session_token"].(string))
+		}
+		if attr["region"] != nil {
+			config.AwsAuth.Region = fwtype.String(attr["region"].(string))
 		}
 		if attr["profile"] != nil {
 			config.AwsAuth.Profile = fwtype.String(attr["profile"].(string))
@@ -248,7 +250,7 @@ func initializeBluechipToken(ctx context.Context, authClient *bluechip_authentic
 		})
 	}
 	if config.AwsAuth != nil {
-		token, err := authClient.LoginWithAws(ctx, config.AwsAuth.ClusterName, defaultString(config.AwsAuth.AccessKey, ""), defaultString(config.AwsAuth.SecretAccessKey, ""), defaultString(config.AwsAuth.SessionToken, ""), config.AwsAuth.Region, defaultString(config.AwsAuth.Profile, ""))
+		token, err := authClient.LoginWithAws(ctx, config.AwsAuth.ClusterName, defaultString(config.AwsAuth.AccessKey, ""), defaultString(config.AwsAuth.SecretAccessKey, ""), defaultString(config.AwsAuth.SessionToken, ""), defaultString(config.AwsAuth.Region, ""), defaultString(config.AwsAuth.Profile, ""))
 		if err == nil {
 			return token, nil
 		}
