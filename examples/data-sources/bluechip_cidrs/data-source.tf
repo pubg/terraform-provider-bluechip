@@ -35,7 +35,7 @@ resource "bluechip_cidr" "c2" {
 data "bluechip_cidrs" "office" {
   namespace = "default"
   filter {
-    operator = "equal"
+    operator = "equals"
     field    = "metadata.annotations.office"
     value    = "true"
   }
@@ -45,7 +45,7 @@ data "bluechip_cidrs" "seoul" {
   namespace = "default"
 
   filter {
-    operator = "equal"
+    operator = "equals"
     field    = "metadata.annotations.bluechip.example.com/location"
     value    = "true"
   }

@@ -30,7 +30,7 @@ func (FilterType) Schema() *schema.Schema {
 				},
 				"operator": {
 					Type:        schema.TypeString,
-					Description: "Operator to use for the query term. One of ['equal', 'notEqual', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].",
+					Description: "Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].",
 					Required:    true,
 					ValidateFunc: validation.StringInSlice([]string{
 						bluechip_models.OperatorEquals,

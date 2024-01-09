@@ -24,8 +24,8 @@ type ListRequest struct {
 }
 
 const OperatorFuzzy = "fuzzy"
-const OperatorEquals = "equal"
-const OperatorNotEquals = "notEqual"
+const OperatorEquals = "equals"
+const OperatorNotEquals = "notEquals"
 const OperatorWildcard = "wildcard"
 const OperatorRegex = "regex"
 const OperatorMatchPhrase = "matchPhrase"

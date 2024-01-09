@@ -60,15 +60,12 @@ provider "bluechip" {
 <a id="nestedblock--aws_auth"></a>
 ### Nested Schema for `aws_auth`
 
-Required:
-
-- `region` (String)
-
 Optional:
 
 - `access_key` (String)
 - `cluster_name` (String)
 - `profile` (String)
+- `region` (String)
 - `secret_access_key` (String)
 - `session_token` (String)
 

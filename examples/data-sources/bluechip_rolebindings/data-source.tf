@@ -1,6 +1,6 @@
 data "bluechip_rolebindings" "current" {
   filter {
-    operator = "equal"
+    operator = "equals"
     key      = "metadata.name"
     value   = ""
   }

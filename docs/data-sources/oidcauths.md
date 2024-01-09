@@ -36,7 +36,7 @@ data "bluechip_oidcauths" "current" {
 Required:
 
 - `field` (String) Field to use for the query term.
-- `operator` (String) Operator to use for the query term. One of ['equal', 'notEqual', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
+- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
 - `value` (String) Value to use for the query term.
 
 

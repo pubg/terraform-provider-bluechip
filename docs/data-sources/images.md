@@ -15,7 +15,7 @@ description: |-
 ```terraform
 data "bluechip_images" "current" {
   filter {
-    operator = "equal"
+    operator = "equals"
     field      = "spec.commitHash"
     value   = "6874ece755439b5b3473b5b910fb4938751d6689"
   }
@@ -46,7 +46,7 @@ data "bluechip_images" "current" {
 Required:
 
 - `field` (String) Field to use for the query term.
-- `operator` (String) Operator to use for the query term. One of ['equal', 'notEqual', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
+- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
 - `value` (String) Value to use for the query term.
 
 
