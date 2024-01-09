@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -14,6 +15,7 @@ import (
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_authenticator"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
+	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 func Provider() *schema.Provider {
@@ -122,7 +124,7 @@ type ProviderModel struct {
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, providerVersion string) (interface{}, diag.Diagnostics) {
-	config := initializeConfiguration(d)
+	config := loadProviderConfiguration(d)
 	tflog.Debug(ctx, "Read Provider Config", fwlog.Field("config", config))
 
 	// Validate the auth configuration values
@@ -169,7 +171,7 @@ type ProviderConfig struct {
 	}
 }
 
-func initializeConfiguration(d *schema.ResourceData) ProviderConfig {
+func loadProviderConfiguration(d *schema.ResourceData) ProviderConfig {
 	var config ProviderConfig
 	config.Address = d.Get("address").(string)
 
@@ -189,6 +191,7 @@ func initializeConfiguration(d *schema.ResourceData) ProviderConfig {
 	}
 
 	if v, ok := d.GetOk("aws_auth"); ok {
+		attr := v.([]interface{})[0].(map[string]interface{})
 		config.AwsAuth = &struct {
 			ClusterName     string
 			AccessKey       *string
@@ -197,12 +200,20 @@ func initializeConfiguration(d *schema.ResourceData) ProviderConfig {
 			Region          string
 			Profile         *string
 		}{
-			ClusterName:     v.([]interface{})[0].(map[string]interface{})["cluster_name"].(string),
-			AccessKey:       v.([]interface{})[0].(map[string]interface{})["access_key"].(*string),
-			SecretAccessKey: v.([]interface{})[0].(map[string]interface{})["secret_access_key"].(*string),
-			SessionToken:    v.([]interface{})[0].(map[string]interface{})["session_token"].(*string),
-			Region:          v.([]interface{})[0].(map[string]interface{})["region"].(string),
-			Profile:         v.([]interface{})[0].(map[string]interface{})["profile"].(*string),
+			ClusterName: attr["cluster_name"].(string),
+			Region:      attr["region"].(string),
+		}
+		if attr["access_key"] != nil {
+			config.AwsAuth.AccessKey = fwtype.String(attr["access_key"].(string))
+		}
+		if attr["secret_access_key"] != nil {
+			config.AwsAuth.SecretAccessKey = fwtype.String(attr["secret_access_key"].(string))
+		}
+		if attr["session_token"] != nil {
+			config.AwsAuth.SessionToken = fwtype.String(attr["session_token"].(string))
+		}
+		if attr["profile"] != nil {
+			config.AwsAuth.Profile = fwtype.String(attr["profile"].(string))
 		}
 	}
 
@@ -220,28 +231,51 @@ func initializeConfiguration(d *schema.ResourceData) ProviderConfig {
 }
 
 func initializeBluechipToken(ctx context.Context, authClient *bluechip_authenticator.Client, config ProviderConfig) (string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	if config.Token != nil {
 		return *config.Token, nil
-	} else if config.BasicAuth != nil {
-		token, err := authClient.LoginWithBasic(context.Background(), config.BasicAuth.Username, config.BasicAuth.Password)
-		if err != nil {
-			return "", diag.FromErr(err)
-		}
-		return token, nil
-	} else if config.AwsAuth != nil {
-		token, err := authClient.LoginWithAws(ctx, config.AwsAuth.ClusterName, defaultString(config.AwsAuth.AccessKey, ""), defaultString(config.AwsAuth.SecretAccessKey, ""), defaultString(config.AwsAuth.SessionToken, ""), config.AwsAuth.Region, defaultString(config.AwsAuth.Profile, ""))
-		if err != nil {
-			return "", diag.FromErr(err)
-		}
-		return token, nil
-	} else if config.OidcAuth != nil {
-		token, err := authClient.LoginWithOidc(context.Background(), config.OidcAuth.Token, config.OidcAuth.ValidatorName)
-		if err != nil {
-			return "", diag.FromErr(err)
-		}
-		return token, nil
 	}
-	return "", diag.Errorf("either token, basic_auth, aws_auth or oidc_auth must be specified")
+	if config.BasicAuth != nil {
+		token, err := authClient.LoginWithBasic(context.Background(), config.BasicAuth.Username, config.BasicAuth.Password)
+		if err == nil {
+			return token, nil
+		}
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Failed to login with basic auth",
+			Detail:        err.Error(),
+			AttributePath: cty.GetAttrPath("basic_auth"),
+		})
+	}
+	if config.AwsAuth != nil {
+		token, err := authClient.LoginWithAws(ctx, config.AwsAuth.ClusterName, defaultString(config.AwsAuth.AccessKey, ""), defaultString(config.AwsAuth.SecretAccessKey, ""), defaultString(config.AwsAuth.SessionToken, ""), config.AwsAuth.Region, defaultString(config.AwsAuth.Profile, ""))
+		if err == nil {
+			return token, nil
+		}
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Failed to login with aws auth",
+			Detail:        err.Error(),
+			AttributePath: cty.GetAttrPath("aws_auth"),
+		})
+	}
+	if config.OidcAuth != nil {
+		token, err := authClient.LoginWithOidc(ctx, config.OidcAuth.Token, config.OidcAuth.ValidatorName)
+		if err == nil {
+			return token, nil
+		}
+		diags = append(diags, diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Failed to login with oidc auth",
+			Detail:        err.Error(),
+			AttributePath: cty.GetAttrPath("oidc_auth"),
+		})
+	}
+	if len(diags) > 0 {
+		return "", diags
+	} else {
+		return "", diag.Errorf("either token, basic_auth, aws_auth or oidc_auth must be specified")
+	}
 }
 
 func defaultString(s *string, def string) string {

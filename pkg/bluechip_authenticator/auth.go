@@ -34,7 +34,6 @@ func (c *Client) doLogin(req *http.Request) (*LoginResponse, *http.Response, err
 	}
 	if resp.StatusCode/100 != 2 {
 		bodyBuf := bluechip_client.ReadBodyForError(resp)
-
 		tflog.Debug(context.Background(), "Login failed", fwlog.Field("status_code", resp.StatusCode), fwlog.Field("body", string(bodyBuf)), fwlog.Field("request", req))
 		return nil, resp, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bodyBuf))
 	}

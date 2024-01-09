@@ -55,3 +55,35 @@ provider "bluechip" {
   }
 }
 `
+
+func TestProviderAws(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testacc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: testacc.TestAccProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccProviderAwsConfig + "\n" + TestAccWhoAmiDataSourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "id", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "name", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system-admin"),
+				),
+			},
+		},
+	})
+}
+
+const TestAccProviderAwsConfig = `
+provider "bluechip" {
+  address = ""
+  basic_auth {
+    username = "admin"
+	password = "admin"
+  }
+  aws_auth {
+	cluster_name = "bluechip"
+	profile = "pubg-devops2"
+	region = "ap-northeast-2"
+  }
+}
+`
