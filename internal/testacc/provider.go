@@ -17,7 +17,7 @@ import (
 // reattach.
 var TestAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
 	"bluechip": func() (tfprotov5.ProviderServer, error) {
-		return schema.NewGRPCProviderServer(provider.Provider()), nil
+		return schema.NewGRPCProviderServer(provider.Provider("testacc", "testcommit")()), nil
 	},
 }
 
@@ -44,9 +44,11 @@ func ProviderTerraformConfig() string {
 	config := `
 provider "bluechip" {
   address = "$address" 
-  basic_auth {
-    username = "$username"
-    password = "$password"
+  auth_flow {
+	basic {
+      username = "$username"
+      password = "$password"
+	}
   }
 }
 `

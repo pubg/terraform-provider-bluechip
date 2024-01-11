@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -14,108 +14,34 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_authenticator"
 	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
+	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwdiag"
 	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
-func Provider() *schema.Provider {
+var providerAuthTyp = &ProviderAuthType{}
+
+func Provider(version string, commit string) func() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"address": {
 				Type:         schema.TypeString,
 				Required:     true,
-				DefaultFunc:  schema.EnvDefaultFunc("BLUECHIP_ADDRESS", ""),
+				DefaultFunc:  schema.EnvDefaultFunc("BLUECHIP_ADDR", ""),
 				ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 			},
-			"token": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_TOKEN", ""),
-			},
-			"basic_auth": {
-				Type:     schema.TypeList,
-				MinItems: 0,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"username": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_USERNAME", ""),
-						},
-						"password": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_PASSWORD", ""),
-						},
-					},
-				},
-			},
-			"aws_auth": {
-				Type:     schema.TypeList,
-				MinItems: 0,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_name": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_CLUSTER_NAME", ""),
-						},
-						"access_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"secret_access_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"session_token": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"region": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"profile": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"oidc_auth": {
-				Type:     schema.TypeList,
-				MinItems: 0,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"validator_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"token": {
-							Type:        schema.TypeString,
-							Required:    true,
-							DefaultFunc: schema.EnvDefaultFunc("BLUECHIP_OIDC_TOKEN", ""),
-						},
-					},
-				},
-			},
+			"auth_flow": providerAuthTyp.Schema(),
 		},
 		ResourcesMap:   resourceMap,
 		DataSourcesMap: dataSourceMap,
 	}
 
 	p.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		return providerConfigure(ctx, d, p.TerraformVersion)
+		return providerConfigure(ctx, d, fmt.Sprintf("%s+%s", version, commit))
 	}
 
-	return p
+	return func() *schema.Provider {
+		return p
+	}
 }
 
 type ProviderModel struct {
@@ -124,7 +50,10 @@ type ProviderModel struct {
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, providerVersion string) (interface{}, diag.Diagnostics) {
-	config := loadProviderConfiguration(d)
+	config, diags := expandProviderConfig(ctx, d)
+	if diags.HasError() {
+		return nil, diags
+	}
 	tflog.Debug(ctx, "Read Provider Config", fwlog.Field("config", config))
 
 	// Validate the auth configuration values
@@ -151,140 +80,89 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, providerVers
 }
 
 type ProviderConfig struct {
-	Address   string
-	Token     *string
-	BasicAuth *struct {
-		Username string
-		Password string
-	}
-	AwsAuth *struct {
-		ClusterName     string
-		AccessKey       *string
-		SecretAccessKey *string
-		SessionToken    *string
-		Region          *string
-		Profile         *string
-	}
-	OidcAuth *struct {
-		ValidatorName string
-		Token         string
-	}
+	Address string
+	Auths   ProviderAuths
 }
 
-func loadProviderConfiguration(d *schema.ResourceData) ProviderConfig {
+func expandProviderConfig(ctx context.Context, d *schema.ResourceData) (*ProviderConfig, diag.Diagnostics) {
 	var config ProviderConfig
 	config.Address = d.Get("address").(string)
 
-	if v, ok := d.GetOk("token"); ok {
-		config.Token = v.(*string)
+	if diags := providerAuthTyp.Expand(ctx, d, &config.Auths); diags.HasError() {
+		return nil, diags
 	}
 
-	// Copilot wrote this code
-	if v, ok := d.GetOk("basic_auth"); ok {
-		config.BasicAuth = &struct {
-			Username string
-			Password string
-		}{
-			Username: v.([]interface{})[0].(map[string]interface{})["username"].(string),
-			Password: v.([]interface{})[0].(map[string]interface{})["password"].(string),
-		}
-	}
-
-	if v, ok := d.GetOk("aws_auth"); ok {
-		attr := v.([]interface{})[0].(map[string]interface{})
-		config.AwsAuth = &struct {
-			ClusterName     string
-			AccessKey       *string
-			SecretAccessKey *string
-			SessionToken    *string
-			Region          *string
-			Profile         *string
-		}{
-			ClusterName: attr["cluster_name"].(string),
-		}
-		if attr["access_key"] != nil {
-			config.AwsAuth.AccessKey = fwtype.String(attr["access_key"].(string))
-		}
-		if attr["secret_access_key"] != nil {
-			config.AwsAuth.SecretAccessKey = fwtype.String(attr["secret_access_key"].(string))
-		}
-		if attr["session_token"] != nil {
-			config.AwsAuth.SessionToken = fwtype.String(attr["session_token"].(string))
-		}
-		if attr["region"] != nil {
-			config.AwsAuth.Region = fwtype.String(attr["region"].(string))
-		}
-		if attr["profile"] != nil {
-			config.AwsAuth.Profile = fwtype.String(attr["profile"].(string))
-		}
-	}
-
-	if v, ok := d.GetOk("oidc_auth"); ok {
-		config.OidcAuth = &struct {
-			ValidatorName string
-			Token         string
-		}{
-			ValidatorName: v.([]interface{})[0].(map[string]interface{})["validator_name"].(string),
-			Token:         v.([]interface{})[0].(map[string]interface{})["token"].(string),
-		}
-	}
-
-	return config
+	return &config, nil
 }
 
-func initializeBluechipToken(ctx context.Context, authClient *bluechip_authenticator.Client, config ProviderConfig) (string, diag.Diagnostics) {
+func initializeBluechipToken(ctx context.Context, authClient *bluechip_authenticator.Client, config *ProviderConfig) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if config.Token != nil {
-		return *config.Token, nil
-	}
-	if config.BasicAuth != nil {
-		token, err := authClient.LoginWithBasic(context.Background(), config.BasicAuth.Username, config.BasicAuth.Password)
-		if err == nil {
+
+	for index, authConfig := range config.Auths.Items {
+		if tokenAuth, ok := authConfig.(*TokenAuth); ok {
+			if tokenAuth.Token != "" {
+				return tokenAuth.Token, nil
+			}
+		} else if basicAuth, ok := authConfig.(*BasicAuth); ok {
+			token, err := authClient.LoginWithBasic(context.Background(), basicAuth.Username, basicAuth.Password)
+			if err != nil {
+				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.basic", index)...)
+				continue
+			}
+			return token, nil
+		} else if awsAuth, ok := authConfig.(*AwsAuth); ok {
+			var clusterName string
+			if awsAuth.ClusterName == "" {
+				awsConfig, err := authClient.GetAwsConfiguration(ctx)
+				if err != nil {
+					diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.aws", index)...)
+					continue
+				}
+				clusterName = awsConfig.ValidClusterNames[0]
+			} else {
+				clusterName = awsAuth.ClusterName
+			}
+
+			awsOptions := &bluechip_authenticator.AwsOptions{
+				ClusterName:     clusterName,
+				AccessKey:       awsAuth.AccessKey,
+				SecretAccessKey: awsAuth.SecretAccessKey,
+				SessionToken:    awsAuth.SessionToken,
+				Region:          awsAuth.Region,
+				Profile:         awsAuth.Profile,
+			}
+			token, err := authClient.LoginWithAws(ctx, awsOptions)
+			if err != nil {
+				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.aws", index)...)
+				continue
+			}
+			return token, nil
+		} else if oidcAuth, ok := authConfig.(*OidcAuth); ok {
+			var oidcToken string
+			if oidcAuth.TokenEnv != nil {
+				oidcToken = os.Getenv(*oidcAuth.TokenEnv)
+			}
+			if oidcAuth.Token != nil {
+				oidcToken = *oidcAuth.Token
+			}
+			if oidcToken == "" {
+				diags = append(diags, diag.Errorf("Failed to resolve oidc token, tokenEnv: %+v, token: %+v, path: auth_flow.%d.oidc", oidcAuth.TokenEnv, oidcAuth.Token, index)...)
+				continue
+			}
+
+			token, err := authClient.LoginWithOidc(ctx, oidcToken, oidcAuth.ValidatorName)
+			if err != nil {
+				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.oidc", index)...)
+				continue
+			}
 			return token, nil
 		}
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Failed to login with basic auth",
-			Detail:        err.Error(),
-			AttributePath: cty.GetAttrPath("basic_auth"),
-		})
-	}
-	if config.AwsAuth != nil {
-		token, err := authClient.LoginWithAws(ctx, config.AwsAuth.ClusterName, defaultString(config.AwsAuth.AccessKey, ""), defaultString(config.AwsAuth.SecretAccessKey, ""), defaultString(config.AwsAuth.SessionToken, ""), defaultString(config.AwsAuth.Region, ""), defaultString(config.AwsAuth.Profile, ""))
-		if err == nil {
-			return token, nil
-		}
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Failed to login with aws auth",
-			Detail:        err.Error(),
-			AttributePath: cty.GetAttrPath("aws_auth"),
-		})
-	}
-	if config.OidcAuth != nil {
-		token, err := authClient.LoginWithOidc(ctx, config.OidcAuth.Token, config.OidcAuth.ValidatorName)
-		if err == nil {
-			return token, nil
-		}
-		diags = append(diags, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Failed to login with oidc auth",
-			Detail:        err.Error(),
-			AttributePath: cty.GetAttrPath("oidc_auth"),
-		})
 	}
 	if len(diags) > 0 {
 		return "", diags
 	} else {
-		return "", diag.Errorf("either token, basic_auth, aws_auth or oidc_auth must be specified")
+		return "", diag.Errorf("either token, basic, aws or oidc must be specified")
 	}
-}
-
-func defaultString(s *string, def string) string {
-	if s == nil {
-		return def
-	}
-	return *s
 }
 
 var resourceMap = map[string]*schema.Resource{}

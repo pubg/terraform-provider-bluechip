@@ -26,8 +26,8 @@ import (
 //go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 var (
-	_ string = "dev"
-	_ string = "local"
+	version string = "dev"
+	commit  string = "local"
 )
 
 func main() {
@@ -39,7 +39,7 @@ func main() {
 	opts := &plugin.ServeOpts{
 		Debug:        debugMode,
 		ProviderAddr: "registry.terraform.io/pubg/bluechip",
-		ProviderFunc: provider.Provider,
+		ProviderFunc: provider.Provider(version, commit),
 	}
 
 	plugin.Serve(opts)

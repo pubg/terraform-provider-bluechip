@@ -23,7 +23,7 @@ type STSTokenRetriever struct {
 	PresignClient *sts.PresignClient
 }
 
-func NewSTSTokenRetriver(client *sts.PresignClient) STSTokenRetriever {
+func NewSTSTokenRetriever(client *sts.PresignClient) STSTokenRetriever {
 	return STSTokenRetriever{PresignClient: client}
 }
 

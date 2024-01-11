@@ -48,10 +48,12 @@ func TestProviderOidc(t *testing.T) {
 
 const TestAccProviderOidcConfig = `
 provider "bluechip" {
-  address = "" 
-  oidc_auth {
-    validator_name = "gitlab"
-	token = "asdf"
+  address = "https://bluechip.example.io"
+  auth_flow {
+    oidc {
+      validator_name = "kubernetes-centre"
+      token          = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
   }
 }
 `
@@ -75,15 +77,82 @@ func TestProviderAws(t *testing.T) {
 
 const TestAccProviderAwsConfig = `
 provider "bluechip" {
-  address = ""
-  basic_auth {
-    username = "admin"
-	password = "admin"
+  address = "https://bluechip.example.io"
+  auth_flow {
+    aws {
+      cluster_name = "bluechip"
+      region       = "us-east-1"
+    }
   }
-  aws_auth {
-	cluster_name = "bluechip"
-	profile = "pubg-devops2"
-	region = "ap-northeast-2"
+}
+`
+
+func TestProviderAwsAutoDiscovery(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testacc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: testacc.TestAccProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccProviderAwsAutoDiscoveryConfig + "\n" + TestAccWhoAmiDataSourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "id", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "name", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system-admin"),
+				),
+			},
+		},
+	})
+}
+
+const TestAccProviderAwsAutoDiscoveryConfig = `
+provider "bluechip" {
+  address = "https://bluechip.example.io"
+  auth_flow {
+    aws {
+      region = "us-east-1"
+	  # profile = "pubg"
+    }
+  }
+}
+`
+
+func TestProviderChain(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testacc.TestAccPreCheck(t) },
+		ProtoV5ProviderFactories: testacc.TestAccProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestAccProviderChainConfig + "\n" + TestAccWhoAmiDataSourceConfig,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "id", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "name", "admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system-admin"),
+				),
+			},
+		},
+	})
+}
+
+const TestAccProviderChainConfig = `
+provider "bluechip" {
+  address = "https://bluechip.example.io"
+  auth_flow {
+    basic {
+      username = "aaaaa"
+      password = "fooooo"
+    }
+  }
+  auth_flow {
+    oidc {
+      validator_name = "kubernetes-centre"
+      token          = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    }
+  }
+  auth_flow {
+    aws {
+      cluster_name = "bluechip2"
+      region       = "us-east-1"
+    }
   }
 }
 `

@@ -64,3 +64,18 @@ func ExpandStringSet(set *schema.Set) []string {
 	}
 	return l
 }
+
+func ExpandStringFromMap(m map[string]any, key string) string {
+	if v, ok := m[key]; ok {
+		return v.(string)
+	}
+	return ""
+}
+
+func ExpandStringPFromMap(m map[string]any, key string) *string {
+	if v, ok := m[key]; ok {
+		vv := v.(string)
+		return &vv
+	}
+	return nil
+}

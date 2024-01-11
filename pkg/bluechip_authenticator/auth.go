@@ -35,7 +35,7 @@ func (c *Client) doLogin(req *http.Request) (*LoginResponse, *http.Response, err
 	if resp.StatusCode/100 != 2 {
 		bodyBuf := bluechip_client.ReadBodyForError(resp)
 		tflog.Debug(context.Background(), "Login failed", fwlog.Field("status_code", resp.StatusCode), fwlog.Field("body", string(bodyBuf)), fwlog.Field("request", req))
-		return nil, resp, fmt.Errorf("unexpected status code: %d, body: %s", resp.StatusCode, string(bodyBuf))
+		return nil, resp, fmt.Errorf("unexpected status code: %d, url: %s, body: %s", resp.StatusCode, req.URL.String(), string(bodyBuf))
 	}
 
 	var loginResponse LoginResponse
@@ -62,24 +62,36 @@ func (c *Client) LoginWithBasic(ctx context.Context, username string, password s
 	return lr.Token, nil
 }
 
-func (c *Client) LoginWithAws(ctx context.Context, clusterName string, accessKey string, secretAccessKey string, sessionToken string, region string, profile string) (string, error) {
-	var configLoadOoptions []func(*config.LoadOptions) error
-	if accessKey != "" && secretAccessKey != "" {
-		configLoadOoptions = append(configLoadOoptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretAccessKey, sessionToken)))
-		tflog.Debug(ctx, "Using credentials from provider parameters")
+type AwsOptions struct {
+	ClusterName     string
+	AccessKey       string
+	SecretAccessKey string
+	SessionToken    string
+	Region          string
+	Profile         string
+}
+
+func (c *Client) LoginWithAws(ctx context.Context, options *AwsOptions) (string, error) {
+	var configLoadOptions []func(*config.LoadOptions) error
+	if options.AccessKey != "" && options.SecretAccessKey != "" {
+		configLoadOptions = append(configLoadOptions, config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(options.AccessKey, options.SecretAccessKey, options.SessionToken)))
+		tflog.Debug(ctx, "Using static credentials from provider parameters")
 	}
-	if region != "" {
-		configLoadOoptions = append(configLoadOoptions, config.WithRegion(region))
+	if options.Region != "" {
+		configLoadOptions = append(configLoadOptions, config.WithRegion(options.Region))
 		tflog.Debug(ctx, "Using region from provider parameters")
 	}
-	if profile != "" {
-		configLoadOoptions = append(configLoadOoptions, config.WithSharedConfigProfile(profile))
+	if options.Profile != "" {
+		configLoadOptions = append(configLoadOptions, config.WithSharedConfigProfile(options.Profile))
 		tflog.Debug(ctx, "Using profile from provider parameters")
 	}
 
-	cfg, err := config.LoadDefaultConfig(ctx, configLoadOoptions...)
+	cfg, err := config.LoadDefaultConfig(ctx, configLoadOptions...)
 	if err != nil {
 		return "", err
+	}
+	if cfg.Region == "" {
+		return "", fmt.Errorf("cannot determine region from provider parameters or aws config")
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("Loaded aws config: %v", cfg))
@@ -87,8 +99,8 @@ func (c *Client) LoginWithAws(ctx context.Context, clusterName string, accessKey
 	stsclient := sts.NewFromConfig(cfg)
 	presignclient := sts.NewPresignClient(stsclient)
 
-	stsRetriver := NewSTSTokenRetriver(presignclient)
-	eksToken, err := stsRetriver.GetToken(ctx, clusterName)
+	stsRetriver := NewSTSTokenRetriever(presignclient)
+	eksToken, err := stsRetriver.GetToken(ctx, options.ClusterName)
 	if err != nil {
 		return "", err
 	}
@@ -127,8 +139,39 @@ func (c *Client) LoginWithOidc(ctx context.Context, token string, authMethod str
 	return lr.Token, nil
 }
 
+func (c *Client) GetAwsConfiguration(ctx context.Context) (*AwsAuthConfiguration, error) {
+	u, err := url.JoinPath(c.address, "/discovery/aws-auth-configuration")
+	if err != nil {
+		return nil, err
+	}
+
+	req, _ := http.NewRequestWithContext(ctx, "GET", u, nil)
+	req.Header.Set("User-Agent", "bluechip-go-http/"+c.version)
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode/100 != 2 {
+		bodyBuf := bluechip_client.ReadBodyForError(resp)
+		return nil, fmt.Errorf("unexpected status code: %d, url: %s, body: %s", resp.StatusCode, u, string(bodyBuf))
+	}
+
+	var awsAuthConfiguration AwsAuthConfiguration
+	if err := json.NewDecoder(resp.Body).Decode(&awsAuthConfiguration); err != nil {
+		return nil, err
+	}
+
+	return &awsAuthConfiguration, nil
+}
+
 type LoginResponse struct {
 	Token     string `json:"token"`
 	ExpiresAt string `json:"expiresAt"`
 	Message   string `json:"message,omitempty"`
+}
+
+type AwsAuthConfiguration struct {
+	ValidClusterNames  []string `json:"validClusterNames"`
+	ValidTokenPrefixes []string `json:"validTokenPrefixes"`
+	ClusterIdHeader    string   `json:"clusterIdHeader"`
 }
