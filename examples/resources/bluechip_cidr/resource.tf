@@ -1,6 +1,6 @@
 resource "bluechip_cidr" "current" {
   metadata {
-    name = "my-test"
+    name      = "my-test"
     namespace = "default"
   }
   spec {

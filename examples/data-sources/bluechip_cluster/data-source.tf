@@ -1,6 +1,6 @@
 data "bluechip_cluster" "current" {
   metadata {
-    name = "test"
+    name      = "test"
     namespace = "default"
   }
 }

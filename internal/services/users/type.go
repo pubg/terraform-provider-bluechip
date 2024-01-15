@@ -52,7 +52,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 
 func (t SpecType) Flatten(in bluechip_models.UserSpec) map[string]any {
 	attr := map[string]any{
-		"password":   in.Password,
+		//"password":   in.Password,
 		"groups":     in.Groups,
 		"attributes": in.Attributes,
 	}

@@ -4,6 +4,6 @@ resource "bluechip_user" "current" {
   }
   spec {
     password = "tetete"
-    groups = ["asdf"]
+    groups   = ["asdf"]
   }
 }

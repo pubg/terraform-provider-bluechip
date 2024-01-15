@@ -4,8 +4,8 @@ resource "bluechip_vendor" "current" {
   }
   spec {
     display_name = "asdf"
-    code_name = "AWS"
-    short_name = "aws"
-    regions = ["asdf"]
+    code_name    = "AWS"
+    short_name   = "aws"
+    regions      = ["asdf"]
   }
 }

@@ -1,6 +1,6 @@
 data "bluechip_rolebinding" "current" {
   metadata {
-    name = "my-test"
+    name      = "my-test"
     namespace = "default"
   }
 }

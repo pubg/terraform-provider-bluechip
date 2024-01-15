@@ -177,8 +177,9 @@ type OidcAuthSpec struct {
 }
 
 type AttributeMapping struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From             string `json:"from"`
+	FromPathResolver string `json:"fromPathResolver,omitempty"`
+	To               string `json:"to"`
 }
 
 var _ ClusterApiResource[ClusterRoleBindingSpec] = &ClusterRoleBinding{}

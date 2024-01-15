@@ -65,6 +65,11 @@ func (t SpecType) Schema() *schema.Schema {
 						Required: !t.Computed,
 						Computed: t.Computed,
 					},
+					"from_path_resolver": {
+						Type:     schema.TypeString,
+						Optional: !t.Computed,
+						Computed: t.Computed,
+					},
 					"to": {
 						Type:     schema.TypeString,
 						Required: !t.Computed,
@@ -98,12 +103,15 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 		out.GroupsPrefix = fwtype.String(attr["groups_prefix"].(string))
 	}
 	if attr["attribute_mapping"] != nil {
-		rawAttributeMappings := fwflex.ExpandMapList(attr["attribute_mapping"].([]any))
-		for _, rawAttributeMapping := range rawAttributeMappings {
-			out.AttributeMapping = append(out.AttributeMapping, bluechip_models.AttributeMapping{
+		for _, rawAttributeMapping := range fwflex.ExpandMapList(attr["attribute_mapping"].([]any)) {
+			mapping := bluechip_models.AttributeMapping{
 				From: rawAttributeMapping["from"].(string),
 				To:   rawAttributeMapping["to"].(string),
-			})
+			}
+			if rawAttributeMapping["from_path_resolver"] != nil {
+				mapping.FromPathResolver = rawAttributeMapping["from_path_resolver"].(string)
+			}
+			out.AttributeMapping = append(out.AttributeMapping, mapping)
 		}
 	}
 	return nil
@@ -111,15 +119,24 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 
 func (t SpecType) Flatten(in bluechip_models.OidcAuthSpec) map[string]any {
 	attr := map[string]any{
-		"username_claim":    in.UsernameClaim,
-		"username_prefix":   in.UsernamePrefix,
-		"issuer":            in.Issuer,
-		"client_id":         in.ClientId,
-		"required_claims":   in.RequiredClaims,
-		"groups_claim":      in.GroupsClaim,
-		"groups_prefix":     in.GroupsPrefix,
-		"attribute_mapping": in.AttributeMapping,
+		"username_claim":  in.UsernameClaim,
+		"username_prefix": in.UsernamePrefix,
+		"issuer":          in.Issuer,
+		"client_id":       in.ClientId,
+		"required_claims": in.RequiredClaims,
+		"groups_claim":    in.GroupsClaim,
+		"groups_prefix":   in.GroupsPrefix,
 	}
-
+	if len(in.AttributeMapping) > 0 {
+		var attributeMapping []map[string]any
+		for _, mapping := range in.AttributeMapping {
+			attributeMapping = append(attributeMapping, map[string]any{
+				"from":               mapping.From,
+				"from_path_resolver": mapping.FromPathResolver,
+				"to":                 mapping.To,
+			})
+		}
+		attr["attribute_mapping"] = attributeMapping
+	}
 	return attr
 }
