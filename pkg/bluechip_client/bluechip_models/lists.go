@@ -29,6 +29,7 @@ const OperatorNotEquals = "notEquals"
 const OperatorWildcard = "wildcard"
 const OperatorRegex = "regex"
 const OperatorMatchPhrase = "matchPhrase"
+const OperatorPrefix = "prefix"
 
 type QueryTerm struct {
 	Operator string `json:"operator"`

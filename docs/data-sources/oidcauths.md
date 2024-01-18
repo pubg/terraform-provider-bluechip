@@ -36,7 +36,7 @@ data "bluechip_oidcauths" "current" {
 Required:
 
 - `field` (String) Field to use for the query term.
-- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
+- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase', 'prefix'].
 - `value` (String) Value to use for the query term.
 
 
@@ -88,4 +88,5 @@ Read-Only:
 Read-Only:
 
 - `from` (String)
+- `from_path_resolver` (String)
 - `to` (String)

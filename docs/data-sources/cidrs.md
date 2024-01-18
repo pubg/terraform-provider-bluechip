@@ -17,7 +17,7 @@ resource "bluechip_cidr" "c1" {
   metadata {
     name      = "cidr1"
     namespace = "default"
-    labels    = {
+    labels = {
       "foo" = "bar"
     }
     annotations = {
@@ -34,11 +34,11 @@ resource "bluechip_cidr" "c2" {
   metadata {
     name      = "cidr2"
     namespace = "default"
-    labels    = {
+    labels = {
       "foo" = "bar"
     }
     annotations = {
-      "office" = "true"
+      "office"                        = "true"
       "bluechip.example.com/location" = "tokyo"
     }
   }
@@ -90,7 +90,7 @@ data "bluechip_cidrs" "seoul" {
 Required:
 
 - `field` (String) Field to use for the query term.
-- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
+- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase', 'prefix'].
 - `value` (String) Value to use for the query term.
 
 

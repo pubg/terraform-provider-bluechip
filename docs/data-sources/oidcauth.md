@@ -80,4 +80,5 @@ Read-Only:
 Read-Only:
 
 - `from` (String)
+- `from_path_resolver` (String)
 - `to` (String)

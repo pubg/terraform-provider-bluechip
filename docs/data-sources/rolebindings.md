@@ -17,7 +17,7 @@ data "bluechip_rolebindings" "current" {
   filter {
     operator = "equals"
     key      = "metadata.name"
-    value   = ""
+    value    = ""
   }
   namespace = "pubg"
 }
@@ -46,7 +46,7 @@ data "bluechip_rolebindings" "current" {
 Required:
 
 - `field` (String) Field to use for the query term.
-- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase'].
+- `operator` (String) Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase', 'prefix'].
 - `value` (String) Value to use for the query term.
 
 

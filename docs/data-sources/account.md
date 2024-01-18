@@ -15,7 +15,7 @@ description: |-
 ```terraform
 data "bluechip_account" "current" {
   metadata {
-    name = "test2"
+    name      = "test2"
     namespace = "default"
   }
 }
