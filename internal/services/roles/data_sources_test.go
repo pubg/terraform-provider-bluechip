@@ -1,4 +1,4 @@
-package images
+package roles
 
 import (
 	"testing"
@@ -15,8 +15,8 @@ func TestAccDataSources(t *testing.T) {
 			{
 				Config: testacc.CombinedConfig(TestAccDataSourcesConfig),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.bluechip_images.current", "id", "pubg"),
-					resource.TestCheckResourceAttrWith("data.bluechip_images.current", "items.#", func(value string) error {
+					resource.TestCheckResourceAttr("data.bluechip_roles.current", "id", "pubg"),
+					resource.TestCheckResourceAttrWith("data.bluechip_roles.current", "items.#", func(value string) error {
 						return nil
 					}),
 				),
@@ -26,12 +26,6 @@ func TestAccDataSources(t *testing.T) {
 }
 
 const TestAccDataSourcesConfig = `
-data "bluechip_images" "current" {
-  filter {
-    operator = "equals"
-    field      = "spec.commitHash"
-    value   = "6874ece755439b5b3473b5b910fb4938751d6689"
-  }
-  namespace = "default"
+data "bluechip_roles" "current" {
 }
 `

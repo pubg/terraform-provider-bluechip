@@ -19,13 +19,13 @@ func TestAccResource(t *testing.T) {
 					resource.TestCheckResourceAttr("bluechip_clusterrolebinding.current", "metadata.0.name", "my-test1"),
 
 					resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.current", "metadata.0.creation_timestamp"),
-					resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.policy_inline_path", "metadata.0.creation_timestamp"),
-					resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.policy_inline_resource", "metadata.0.creation_timestamp"),
-					resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.current", "spec.0.policy_ref"),
-					resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_path", "spec.0.policy_inline.0.actions.0", "read"),
-					resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_path", "spec.0.policy_inline.0.paths.0", "/**"),
-					resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_resource", "spec.0.policy_inline.0.actions.0", "read"),
-					resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_resource", "spec.0.policy_inline.0.resources.0.api_group", "core"),
+					//resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.policy_inline_path", "metadata.0.creation_timestamp"),
+					//resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.policy_inline_resource", "metadata.0.creation_timestamp"),
+					//resource.TestCheckResourceAttrSet("bluechip_clusterrolebinding.current", "spec.0.policy_ref"),
+					//resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_path", "spec.0.policy_inline.0.actions.0", "read"),
+					//resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_path", "spec.0.policy_inline.0.paths.0", "/**"),
+					//resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_resource", "spec.0.policy_inline.0.actions.0", "read"),
+					//resource.TestCheckResourceAttr("bluechip_clusterrolebinding.policy_inline_resource", "spec.0.policy_inline.0.resources.0.api_group", "core"),
 				),
 			},
 		},
@@ -35,48 +35,15 @@ func TestAccResource(t *testing.T) {
 const TestAccResourceConfig = `
 resource "bluechip_clusterrolebinding" "current" {
   metadata {
-    name = "my-test1"
+    name = "my-test"
   }
   spec {
     subject_ref {
       kind = "User"
 	  name = "my-test"
     }
-    policy_ref = "admin"
-  }
-}
-
-resource "bluechip_clusterrolebinding" "policy_inline_path" {
-  metadata {
-    name = "my-test2"
-  }
-  spec {
-    subject_ref {
-      kind = "User"
-	  name = "my-test"
-    }
-    policy_inline {
-      actions = ["read"]
-	  paths = ["/**"]
-	}
-  }
-}
-
-resource "bluechip_clusterrolebinding" "policy_inline_resource" {
-  metadata {
-    name = "my-test3"
-  }
-  spec {
-    subject_ref {
-      kind = "User"
-	  name = "my-test"
-    }
-    policy_inline {
-      actions = ["read"]
-	  resources {
-		api_group = "core"
-		kind = "Namespace"
-	  }
+	role_ref {
+	  name = "admin"
 	}
   }
 }

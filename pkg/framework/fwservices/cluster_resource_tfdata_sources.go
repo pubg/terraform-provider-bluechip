@@ -65,7 +65,7 @@ func (r *ClusterTerraformDataSources[T, P]) Read(ctx context.Context, d *schema.
 		return diag.FromErr(err)
 	}
 
-	d.SetId("ssss")
+	d.SetId("pubg")
 
 	if diags := r.FilterType.FlattenWithSet(ctx, d, filter); diags.HasError() {
 		return diags
@@ -76,10 +76,12 @@ func (r *ClusterTerraformDataSources[T, P]) Read(ctx context.Context, d *schema.
 		metadataAttr := r.MetadataType.Flatten(object.GetMetadata())
 		specAttr := r.SpecType.Flatten(object.GetSpec())
 
-		itemsAttr = append(itemsAttr, map[string]any{
-			"metadata": []any{metadataAttr},
-			"spec":     []any{specAttr},
-		})
+		itemAttr := map[string]any{"metadata": []any{metadataAttr}}
+		if specAttr != nil {
+			itemAttr["spec"] = []any{specAttr}
+		}
+
+		itemsAttr = append(itemsAttr, itemAttr)
 	}
 
 	if err := d.Set("items", itemsAttr); err != nil {

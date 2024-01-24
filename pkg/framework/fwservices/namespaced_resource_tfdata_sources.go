@@ -78,10 +78,12 @@ func (r *NamespacedTerraformDataSources[T, P]) Read(ctx context.Context, d *sche
 		metadataAttr := r.MetadataType.Flatten(object.GetMetadata())
 		specAttr := r.SpecType.Flatten(object.GetSpec())
 
-		itemsAttr = append(itemsAttr, map[string]any{
-			"metadata": []any{metadataAttr},
-			"spec":     []any{specAttr},
-		})
+		itemAttr := map[string]any{"metadata": []any{metadataAttr}}
+		if specAttr != nil {
+			itemAttr["spec"] = []any{specAttr}
+		}
+
+		itemsAttr = append(itemsAttr, itemAttr)
 	}
 
 	if err := d.Set("items", itemsAttr); err != nil {

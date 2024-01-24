@@ -1,4 +1,4 @@
-package users
+package roles
 
 import (
 	"testing"
@@ -15,10 +15,10 @@ func TestAccResource(t *testing.T) {
 			{
 				Config: testacc.CombinedConfig(TestAccResourceConfig),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("bluechip_user.current", "id", "my-test"),
-					resource.TestCheckResourceAttr("bluechip_user.current", "metadata.0.name", "my-test"),
-					resource.TestCheckResourceAttrSet("bluechip_user.current", "metadata.0.creation_timestamp"),
-					resource.TestCheckResourceAttrWith("bluechip_user.current", "metadata.0.name", func(value string) error {
+					resource.TestCheckResourceAttr("bluechip_role.current", "id", "my-test"),
+					resource.TestCheckResourceAttr("bluechip_role.current", "metadata.0.name", "my-test"),
+					resource.TestCheckResourceAttrSet("bluechip_role.current", "metadata.0.creation_timestamp"),
+					resource.TestCheckResourceAttrWith("bluechip_role.current", "metadata.0.name", func(value string) error {
 						return nil
 					}),
 				),
@@ -28,14 +28,15 @@ func TestAccResource(t *testing.T) {
 }
 
 const TestAccResourceConfig = `
-resource "bluechip_user" "current" {
+resource "bluechip_role" "current" {
   metadata {
     name = "my-test"
   }
   spec {
-    password = "tetete"
-    groups = ["asdf"]
-    attributes = {}
+    statements {
+		actions = ["read"]
+		paths = ["/**"]
+	}
   }
 }
 `

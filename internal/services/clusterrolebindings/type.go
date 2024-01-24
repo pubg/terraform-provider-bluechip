@@ -24,16 +24,14 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	}
 
 	out.SubjectsRef = rb.SubjectsRef
-	out.PolicyInline = rb.PolicyInline
-	out.PolicyRef = rb.PolicyRef
+	out.RoleRef = rb.RoleRef
 	return nil
 }
 
 func (t SpecType) Flatten(in bluechip_models.ClusterRoleBindingSpec) map[string]any {
 	var rb bluechip_models.RoleBindingSpec
 	rb.SubjectsRef = in.SubjectsRef
-	rb.PolicyInline = in.PolicyInline
-	rb.PolicyRef = in.PolicyRef
+	rb.RoleRef = in.RoleRef
 
 	return t.RbType.Flatten(rb)
 }

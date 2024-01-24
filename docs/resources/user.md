@@ -63,11 +63,11 @@ Read-Only:
 
 Required:
 
+- `attributes` (Map of String)
 - `password` (String)
 
 Optional:
 
-- `attributes` (Map of String)
 - `groups` (Set of String)
 
 

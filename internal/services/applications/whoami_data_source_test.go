@@ -126,7 +126,7 @@ func TestProviderChain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "id", "admin"),
 					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "name", "admin"),
-					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system-admin"),
+					resource.TestCheckResourceAttr("data.bluechip_whoami.current", "groups.0", "system:admin"),
 				),
 			},
 		},
@@ -135,11 +135,11 @@ func TestProviderChain(t *testing.T) {
 
 const TestAccProviderChainConfig = `
 provider "bluechip" {
-  address = "https://bluechip.example.io"
+  address = "http://localhost:3000"
   auth_flow {
     basic {
-      username = "aaaaa"
-      password = "fooooo"
+      username = "admin"
+      password = "ulizzang"
     }
   }
   auth_flow {

@@ -34,11 +34,11 @@ func TestAccDataSources(t *testing.T) {
 
 const TestAccDataSourcesConfig = `
 data "bluechip_cidrs" "current" {
-  namespace = "office"
+  namespace = "default"
 }
 
 data "bluechip_cidrs" "current2" {
-  namespace = "office"
+  namespace = "default"
 
   filter {
 	operator = "fuzzy"

@@ -149,8 +149,8 @@ type UserSpec struct {
 	BaseSpec `json:"-"`
 
 	Password   string            `json:"password"`
-	Groups     []string          `json:"groups,omitempty"`
-	Attributes map[string]string `json:"attributes,omitempty"`
+	Groups     []string          `json:"groups"`
+	Attributes map[string]string `json:"attributes"`
 }
 
 var _ ClusterApiResource[OidcAuthSpec] = &OidcAuth{}
@@ -195,9 +195,8 @@ type ClusterRoleBinding struct {
 type ClusterRoleBindingSpec struct {
 	BaseSpec `json:"-"`
 
-	SubjectsRef  SubjectRef        `json:"subjectsRef"`
-	PolicyInline []PolicyStatement `json:"policyInline,omitempty"`
-	PolicyRef    *string           `json:"policyRef,omitempty"`
+	SubjectsRef SubjectRef `json:"subjectsRef"`
+	RoleRef     RoleRef    `json:"roleRef"`
 }
 
 var _ NamespacedApiResource[RoleBindingSpec] = &RoleBinding{}
@@ -213,13 +212,30 @@ type RoleBinding struct {
 type RoleBindingSpec struct {
 	BaseSpec `json:"-"`
 
-	SubjectsRef  SubjectRef        `json:"subjectsRef"`
-	PolicyInline []PolicyStatement `json:"policyInline,omitempty"`
-	PolicyRef    *string           `json:"policyRef,omitempty"`
+	SubjectsRef SubjectRef `json:"subjectsRef"`
+	RoleRef     RoleRef    `json:"roleRef"`
+}
+
+type Role struct {
+	BaseResponse `json:"-"`
+
+	*TypeMeta                `json:",inline"`
+	*MetadataContainer       `json:",inline"`
+	*SpecContainer[RoleSpec] `json:",inline"`
+}
+
+type RoleSpec struct {
+	BaseSpec `json:"-"`
+
+	Statements []PolicyStatement `json:"statements"`
 }
 
 type SubjectRef struct {
 	Kind string `json:"kind"`
+	Name string `json:"name"`
+}
+
+type RoleRef struct {
 	Name string `json:"name"`
 }
 

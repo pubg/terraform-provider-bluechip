@@ -28,10 +28,10 @@ func TestAccDataSources(t *testing.T) {
 const TestAccDataSourcesConfig = `
 data "bluechip_rolebindings" "current" {
   filter {
-    operator = "equal"
-    key      = "metadata.name"
+    operator = "equals"
+    field      = "metadata.name"
     value   = ""
   }
-  namespace = "pubg"
+  namespace = "default"
 }
 `

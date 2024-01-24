@@ -73,27 +73,15 @@ Read-Only:
 
 Read-Only:
 
-- `policy_inline` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--policy_inline))
-- `policy_ref` (String)
+- `role_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--role_ref))
 - `subject_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--subject_ref))
 
-<a id="nestedobjatt--items--spec--policy_inline"></a>
-### Nested Schema for `items.spec.policy_inline`
+<a id="nestedobjatt--items--spec--role_ref"></a>
+### Nested Schema for `items.spec.role_ref`
 
 Read-Only:
 
-- `actions` (Set of String)
-- `paths` (Set of String)
-- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--policy_inline--resources))
-
-<a id="nestedobjatt--items--spec--policy_inline--resources"></a>
-### Nested Schema for `items.spec.policy_inline.resources`
-
-Read-Only:
-
-- `api_group` (String)
-- `kind` (String)
-
+- `name` (String)
 
 
 <a id="nestedobjatt--items--spec--subject_ref"></a>

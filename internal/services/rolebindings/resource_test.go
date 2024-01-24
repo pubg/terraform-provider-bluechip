@@ -38,7 +38,9 @@ resource "bluechip_rolebinding" "current" {
       kind = "User"
 	  name = "my-test"
     }
-    policy_ref = "admin"
+	role_ref {
+	  name = "admin"
+	}
   }
 }
 `

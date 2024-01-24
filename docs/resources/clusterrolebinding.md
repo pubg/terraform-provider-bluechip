@@ -66,12 +66,16 @@ Read-Only:
 
 Required:
 
+- `role_ref` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--role_ref))
 - `subject_ref` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--subject_ref))
 
-Optional:
+<a id="nestedblock--spec--role_ref"></a>
+### Nested Schema for `spec.role_ref`
 
-- `policy_inline` (Block List) (see [below for nested schema](#nestedblock--spec--policy_inline))
-- `policy_ref` (String)
+Required:
+
+- `name` (String) Name of the referent.
+
 
 <a id="nestedblock--spec--subject_ref"></a>
 ### Nested Schema for `spec.subject_ref`
@@ -80,28 +84,6 @@ Required:
 
 - `kind` (String) Kind of the referent. Valid kinds are 'User', 'Group'.
 - `name` (String) Name of the referent.
-
-
-<a id="nestedblock--spec--policy_inline"></a>
-### Nested Schema for `spec.policy_inline`
-
-Required:
-
-- `actions` (Set of String) Actions is a list of actions this role binding grants access to.
-
-Optional:
-
-- `paths` (Set of String) Paths is a list of paths this role binding grants access to.
-- `resources` (Block List) Resources is a list of resources this role binding grants access to. (see [below for nested schema](#nestedblock--spec--policy_inline--resources))
-
-<a id="nestedblock--spec--policy_inline--resources"></a>
-### Nested Schema for `spec.policy_inline.resources`
-
-Required:
-
-- `api_group` (String) APIGroup is the group for the resource being referenced.
-- `kind` (String) Kind is the type of resource being referenced.
-
 
 
 

@@ -29,7 +29,7 @@ func (t SpecType) Schema() *schema.Schema {
 		},
 		"attributes": {
 			Type:     schema.TypeMap,
-			Optional: true,
+			Required: !t.Computed,
 			Computed: t.Computed,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},

@@ -17,6 +17,7 @@ import (
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/namespaces"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/oidcauths"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/rolebindings"
+	_ "github.com/pubg/terraform-provider-bluechip/internal/services/roles"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/users"
 	_ "github.com/pubg/terraform-provider-bluechip/internal/services/vendors"
 )

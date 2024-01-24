@@ -86,6 +86,13 @@ var OidcAuthGvk = GroupVersionKind{
 	KindPlural: "OidcAuths",
 }
 
+var RoleGvk = GroupVersionKind{
+	Group:      "rbac.bluechip.pubg.io",
+	Version:    "v1",
+	Kind:       "Role",
+	KindPlural: "Roles",
+}
+
 var UsersGvk = GroupVersionKind{
 	Group:      "auth.bluechip.pubg.io",
 	Version:    "v1",
