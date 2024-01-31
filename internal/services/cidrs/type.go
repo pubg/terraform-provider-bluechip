@@ -44,8 +44,14 @@ func (t SpecType) Schema() *schema.Schema {
 
 func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.CidrSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
-	out.Ipv4Cidrs = fwflex.ExpandStringSet(attr["ipv4_cidrs"].(*schema.Set))
-	out.Ipv6Cidrs = fwflex.ExpandStringSet(attr["ipv6_cidrs"].(*schema.Set))
+
+	if attr["ipv4_cidrs"] != nil {
+		out.Ipv4Cidrs = fwflex.ExpandStringSet(attr["ipv4_cidrs"].(*schema.Set))
+	}
+
+	if attr["ipv6_cidrs"] != nil {
+		out.Ipv6Cidrs = fwflex.ExpandStringSet(attr["ipv6_cidrs"].(*schema.Set))
+	}
 	return nil
 }
 
