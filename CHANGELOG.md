@@ -1,2 +1,2 @@
 ## Changelog   
-* 42a5655 fix
+* 2d360f5 fix: publish script
