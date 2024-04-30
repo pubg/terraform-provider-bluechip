@@ -3,10 +3,10 @@ package images
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type SpecType struct {
@@ -52,7 +52,7 @@ func (t SpecType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ImageSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip.ImageSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.App = attr["app"].(string)
 	out.Timestamp = attr["timestamp"].(int)
@@ -63,7 +63,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	return nil
 }
 
-func (t SpecType) Flatten(in bluechip_models.ImageSpec) map[string]any {
+func (t SpecType) Flatten(in bluechip.ImageSpec) map[string]any {
 	attr := map[string]any{
 		"app":         in.App,
 		"timestamp":   in.Timestamp,

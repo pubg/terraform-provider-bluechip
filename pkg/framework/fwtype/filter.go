@@ -3,12 +3,12 @@ package fwtype
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_meta"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 )
 
 var _ TypeHelper[FilterValue] = &FilterType{}
@@ -33,13 +33,13 @@ func (FilterType) Schema() *schema.Schema {
 					Description: "Operator to use for the query term. One of ['equals', 'notEquals', 'fuzzy', 'wildcard', 'regex', 'matchPhrase', 'prefix'].",
 					Required:    true,
 					ValidateFunc: validation.StringInSlice([]string{
-						bluechip_models.OperatorEquals,
-						bluechip_models.OperatorNotEquals,
-						bluechip_models.OperatorFuzzy,
-						bluechip_models.OperatorWildcard,
-						bluechip_models.OperatorRegex,
-						bluechip_models.OperatorMatchPhrase,
-						bluechip_models.OperatorPrefix,
+						api_meta.OperatorEquals,
+						api_meta.OperatorNotEquals,
+						api_meta.OperatorFuzzy,
+						api_meta.OperatorWildcard,
+						api_meta.OperatorRegex,
+						api_meta.OperatorMatchPhrase,
+						api_meta.OperatorPrefix,
 					}, false),
 				},
 				"value": {
@@ -55,7 +55,7 @@ func (FilterType) Schema() *schema.Schema {
 func (FilterType) Expand(ctx context.Context, d *schema.ResourceData, out *FilterValue) diag.Diagnostics {
 	if filter, ok := d.GetOk("filter"); ok {
 		for _, filterItem := range fwflex.ExpandMapList(filter.([]any)) {
-			out.Filter = append(out.Filter, bluechip_models.QueryTerm{
+			out.Filter = append(out.Filter, api_meta.QueryTerm{
 				Field:    filterItem["field"].(string),
 				Operator: filterItem["operator"].(string),
 				Value:    filterItem["value"].(string),
@@ -101,5 +101,5 @@ func (FilterType) FlattenWithSet(ctx context.Context, d *schema.ResourceData, in
 }
 
 type FilterValue struct {
-	Filter []bluechip_models.QueryTerm
+	Filter []api_meta.QueryTerm
 }

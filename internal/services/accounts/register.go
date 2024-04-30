@@ -1,6 +1,6 @@
 package accounts
 
-import "github.com/pubg/terraform-provider-bluechip/internal/provider"
+import "git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
 
 func init() {
 	provider.RegisterResource("bluechip_account", NewResource().Resource())

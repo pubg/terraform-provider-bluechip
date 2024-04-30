@@ -4,23 +4,25 @@ import (
 	"context"
 	"time"
 
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_client"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_meta"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwbuilder"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
-type ClusterTerraformDataSource[T bluechip_models.ClusterApiResource[P], P bluechip_models.BaseSpec] struct {
+type ClusterTerraformDataSource[T api_meta.ClusterApiResource, S any] struct {
 	Timeout time.Duration
-	Gvk     bluechip_models.GroupVersionKind
+	Gvk     api_meta.ExtendedGroupVersionKind
 
-	MetadataType fwtype.TypeHelper[bluechip_models.Metadata]
-	SpecType     fwtype.TypeHelper[P]
+	MetadataType     fwtype.TypeHelper[api_meta.Metadata]
+	SpecType         fwtype.TypeHelper[S]
+	DebuilderFactory fwbuilder.ResourceDebuilderFactory[T]
 }
 
-func (r *ClusterTerraformDataSource[T, P]) Resource() *schema.Resource {
+func (r *ClusterTerraformDataSource[T, S]) Resource() *schema.Resource {
 	scheme := map[string]*schema.Schema{
 		"metadata": r.MetadataType.Schema(),
 	}
@@ -40,30 +42,36 @@ func (r *ClusterTerraformDataSource[T, P]) Resource() *schema.Resource {
 	}
 }
 
-func (r *ClusterTerraformDataSource[T, P]) Read(ctx context.Context, d *schema.ResourceData, client *bluechip_client.ClusterResourceClient[T, P]) diag.Diagnostics {
-	var metadata bluechip_models.Metadata
-	if diags := r.MetadataType.Expand(ctx, d, &metadata); diags.HasError() {
+func (r *ClusterTerraformDataSource[T, S]) Read(ctx context.Context, d *schema.ResourceData, client *api_client.ArcaneClusterResourceClient[T]) diag.Diagnostics {
+	var requestMetadata api_meta.Metadata
+	if diags := r.MetadataType.Expand(ctx, d, &requestMetadata); diags.HasError() {
 		return diags
 	}
 
-	object, err := client.Get(ctx, metadata.Name)
+	object, err := client.Get(ctx, requestMetadata.Name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(ClusterResourceIdentity(metadata.Name))
+	d.SetId(ClusterResourceIdentity(requestMetadata.Name))
 
-	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(object.GetMetadata())); diags.HasError() {
+	debuilder := r.DebuilderFactory.New(object)
+
+	metadata := debuilder.Get(fwbuilder.FieldMetadata).(api_meta.Metadata)
+	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(metadata)); diags.HasError() {
 		return diags
 	}
-	if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(object.GetSpec())); diags.HasError() {
-		return diags
+	if debuilder.Get(fwbuilder.FieldSpec) != nil {
+		spec := debuilder.Get(fwbuilder.FieldSpec).(S)
+		if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(spec)); diags.HasError() {
+			return diags
+		}
 	}
 
 	return nil
 }
 
-func (r *ClusterTerraformDataSource[T, P]) clusterWideClient(meta interface{}) *bluechip_client.ClusterResourceClient[T, P] {
+func (r *ClusterTerraformDataSource[T, S]) clusterWideClient(meta interface{}) *api_client.ArcaneClusterResourceClient[T] {
 	model := meta.(*provider.ProviderModel)
-	return bluechip_client.NewClusterClient[T, P](model.Client, r.Gvk)
+	return api_client.NewClusterResourceClient[T](model.Client.GetArcaneClient(), r.Gvk, model.Client.GetBasePath())
 }

@@ -3,8 +3,8 @@ package users
 import (
 	"testing"
 
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/testacc"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/pubg/terraform-provider-bluechip/internal/testacc"
 )
 
 func TestAccResource(t *testing.T) {

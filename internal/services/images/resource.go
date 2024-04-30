@@ -3,23 +3,18 @@ package images
 import (
 	"time"
 
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwservices"
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwservices"
 )
 
 func NewResource() fwservices.ResourceFactory {
-	return &fwservices.NamespacedTerraformResource[bluechip_models.Image, bluechip_models.ImageSpec]{
-		Gvk:     bluechip_models.ImageGvk,
+	return &fwservices.NamespacedTerraformResource[bluechip.Image, bluechip.ImageSpec]{
+		Gvk:     bluechip.ImageGvk,
 		Timeout: 30 * time.Second,
-		Constructor: func() bluechip_models.Image {
-			return bluechip_models.Image{
-				TypeMeta:          &bluechip_models.TypeMeta{},
-				MetadataContainer: &bluechip_models.MetadataContainer{},
-				SpecContainer:     &bluechip_models.SpecContainer[bluechip_models.ImageSpec]{},
-			}
-		},
 
-		MetadataType: fwservices.NamespacedResourceMetadataType,
-		SpecType:     &SpecType{Computed: false},
+		MetadataType:     fwservices.NamespacedResourceMetadataType,
+		SpecType:         &SpecType{Computed: false},
+		DebuilderFactory: &DebuilderFactory{},
+		BuilderFactory:   &BuilderFactory{},
 	}
 }

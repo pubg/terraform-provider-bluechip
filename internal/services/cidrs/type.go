@@ -3,12 +3,12 @@ package cidrs
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type SpecType struct {
@@ -42,7 +42,7 @@ func (t SpecType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.CidrSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip.CidrSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 
 	if attr["ipv4_cidrs"] != nil {
@@ -55,7 +55,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	return nil
 }
 
-func (t SpecType) Flatten(in bluechip_models.CidrSpec) map[string]any {
+func (t SpecType) Flatten(in bluechip.CidrSpec) map[string]any {
 	attr := map[string]any{
 		"ipv4_cidrs": in.Ipv4Cidrs,
 		"ipv6_cidrs": in.Ipv6Cidrs,

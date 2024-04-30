@@ -3,23 +3,23 @@ package main
 import (
 	"flag"
 
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
 )
 
 import (
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/accounts"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/applications"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/cidrs"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/clusterrolebindings"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/clusters"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/images"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/namespaces"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/oidcauths"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/rolebindings"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/roles"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/users"
-	_ "github.com/pubg/terraform-provider-bluechip/internal/services/vendors"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/accounts"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/applications"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/cidrs"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/clusterrolebindings"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/clusters"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/images"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/namespaces"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/oidcauths"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/rolebindings"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/roles"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/users"
+	_ "git.projectbro.com/Devops/terraform-provider-bluechip/internal/services/vendors"
 )
 
 // Run the docs generation tool, check its repository for more information on how it works and how docs

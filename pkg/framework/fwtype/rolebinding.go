@@ -3,13 +3,13 @@ package fwtype
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 )
 
-var _ TypeHelper[bluechip_models.RoleBindingSpec] = &RoleBindingType{}
+var _ TypeHelper[bluechip.RoleBindingSpec] = &RoleBindingType{}
 
 type RoleBindingType struct {
 	Computed bool
@@ -46,23 +46,23 @@ func (t RoleBindingType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (RoleBindingType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.RoleBindingSpec) diag.Diagnostics {
+func (RoleBindingType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip.RoleBindingSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 
 	rawSubjectRef := fwflex.ExpandMapList(attr["subject_ref"].([]any))
-	out.SubjectsRef = bluechip_models.SubjectRef{
+	out.SubjectsRef = bluechip.SubjectRef{
 		Kind: rawSubjectRef[0]["kind"].(string),
 		Name: rawSubjectRef[0]["name"].(string),
 	}
 
 	rawRoleRef := fwflex.ExpandMapList(attr["role_ref"].([]any))
-	out.RoleRef = bluechip_models.RoleRef{
+	out.RoleRef = bluechip.RoleRef{
 		Name: rawRoleRef[0]["name"].(string),
 	}
 	return nil
 }
 
-func (RoleBindingType) Flatten(in bluechip_models.RoleBindingSpec) map[string]any {
+func (RoleBindingType) Flatten(in bluechip.RoleBindingSpec) map[string]any {
 	attr := map[string]any{
 		"subject_ref": []map[string]any{{
 			"kind": in.SubjectsRef.Kind,

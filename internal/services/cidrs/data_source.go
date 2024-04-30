@@ -3,16 +3,17 @@ package cidrs
 import (
 	"time"
 
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwservices"
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwservices"
 )
 
 func NewDataSource() fwservices.ResourceFactory {
-	return &fwservices.NamespacedTerraformDataSource[bluechip_models.Cidr, bluechip_models.CidrSpec]{
-		Gvk:     bluechip_models.CidrGvk,
+	return &fwservices.NamespacedTerraformDataSource[bluechip.Cidr, bluechip.CidrSpec]{
+		Gvk:     bluechip.CidrGvk,
 		Timeout: 30 * time.Second,
 
-		MetadataType: fwservices.NamespacedDataSourceMetadataType,
-		SpecType:     &SpecType{Computed: true},
+		MetadataType:     fwservices.NamespacedDataSourceMetadataType,
+		SpecType:         &SpecType{Computed: true},
+		DebuilderFactory: &DebuilderFactory{},
 	}
 }

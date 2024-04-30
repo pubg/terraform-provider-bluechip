@@ -5,10 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
 )
 
-type Expander[T bluechip_models.BaseSpec] func(ctx context.Context, d *schema.ResourceData, out *T) diag.Diagnostics
+type Expander[T any] func(ctx context.Context, d *schema.ResourceData, out *T) diag.Diagnostics
 
 func ExtractSingleBlock(ctx context.Context, d *schema.ResourceData, blockName string) (map[string]any, diag.Diagnostics) {
 	rawBlocks, ok := d.GetOk(blockName)

@@ -1,6 +1,6 @@
 package users
 
-import "github.com/pubg/terraform-provider-bluechip/internal/provider"
+import "git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
 
 func init() {
 	provider.RegisterResource("bluechip_user", NewResource().Resource())

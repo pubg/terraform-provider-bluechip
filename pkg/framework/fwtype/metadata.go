@@ -3,13 +3,13 @@ package fwtype
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_meta"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
 )
 
-var _ TypeHelper[bluechip_models.Metadata] = &MetadataType{}
+var _ TypeHelper[api_meta.Metadata] = &MetadataType{}
 
 type MetadataType struct {
 	Namespaced bool
@@ -67,7 +67,7 @@ func (t MetadataType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (MetadataType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.Metadata) diag.Diagnostics {
+func (MetadataType) Expand(ctx context.Context, d *schema.ResourceData, out *api_meta.Metadata) diag.Diagnostics {
 	attr, diags := fwflex.ExtractSingleBlock(ctx, d, "metadata")
 	if diags.HasError() {
 		return diags
@@ -92,7 +92,7 @@ func (MetadataType) Expand(ctx context.Context, d *schema.ResourceData, out *blu
 	return nil
 }
 
-func (MetadataType) Flatten(in bluechip_models.Metadata) map[string]any {
+func (MetadataType) Flatten(in api_meta.Metadata) map[string]any {
 	attr := map[string]any{}
 	attr["name"] = in.Name
 	if in.Namespace != "" {

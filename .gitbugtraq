@@ -11,7 +11,7 @@
 	logregex = (ASKSBX-\\d+)
 
 [bugtraq "GITHUB"]
-	url = https://github.com/pubg/terraform-provider-bluechip/pull/%BUGID%
+	url = https://git.projectbro.com/Devops/terraform-provider-bluechip/pull/%BUGID%
 	loglinkregex = "#\\d+"
 	logregex = \\d+
 

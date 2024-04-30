@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
 )
 
 func NewWhoamiDataSource() *schema.Resource {
@@ -36,7 +36,7 @@ func NewWhoamiDataSource() *schema.Resource {
 
 func dataSourceWhoamiRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	model := meta.(*provider.ProviderModel)
-	whoamiResp, err := model.Client.Whoami(ctx)
+	whoamiResp, err := model.Client.Auths().Whoami(ctx)
 	if err != nil {
 		return diag.Errorf("Unable to read example, got error: %s", err)
 	}

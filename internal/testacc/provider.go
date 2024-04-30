@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/joho/godotenv"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
@@ -45,17 +45,15 @@ func ProviderTerraformConfig() string {
 provider "bluechip" {
   address = "$address" 
   auth_flow {
-	basic {
-      username = "$username"
-      password = "$password"
+	token {
+      token = "$token"
 	}
   }
 }
 `
 	variables := map[string]string{
-		"$address":  os.Getenv("BLUECHIP_ADDRESS"),
-		"$username": os.Getenv("BLUECHIP_USERNAME"),
-		"$password": os.Getenv("BLUECHIP_PASSWORD"),
+		"$address": os.Getenv("BLUECHIP_ADDRESS"),
+		"$token":   os.Getenv("BLUECHIP_TOKEN"),
 	}
 
 	for key, val := range variables {

@@ -3,12 +3,12 @@ package clusters
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type SpecType struct {
@@ -101,7 +101,7 @@ func (t SpecType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.ClusterSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip.ClusterSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.Project = attr["project"].(string)
 	out.Environment = attr["environment"].(string)
@@ -110,14 +110,14 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 
 	if pubgAttr, ok := d.GetOk("spec.0.pubg.0"); ok {
 		pubg := fwflex.ExpandMap(pubgAttr.(map[string]any))
-		out.Pubg = &bluechip_models.ClusterSpecPubg{
+		out.Pubg = &bluechip.ClusterSpecPubg{
 			Infra: pubg["infra"],
 			Site:  pubg["site"],
 		}
 	}
 
 	vendor := fwflex.ExpandMap(d.Get("spec.0.vendor.0").(map[string]any))
-	out.Vendor = bluechip_models.ClusterSpecVendor{
+	out.Vendor = bluechip.ClusterSpecVendor{
 		Name:      vendor["name"],
 		AccountId: vendor["account_id"],
 		Engine:    vendor["engine"],
@@ -125,7 +125,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	}
 
 	kubernetes := fwflex.ExpandMap(d.Get("spec.0.kubernetes.0").(map[string]any))
-	out.Kubernetes = bluechip_models.ClusterSpecKubernetes{
+	out.Kubernetes = bluechip.ClusterSpecKubernetes{
 		Endpoint: kubernetes["endpoint"],
 		CaCert:   kubernetes["ca_cert"],
 		SaIssuer: kubernetes["sa_issuer"],
@@ -134,7 +134,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	return nil
 }
 
-func (t SpecType) Flatten(in bluechip_models.ClusterSpec) map[string]any {
+func (t SpecType) Flatten(in bluechip.ClusterSpec) map[string]any {
 	attr := map[string]any{}
 	attr["project"] = in.Project
 	attr["environment"] = in.Environment

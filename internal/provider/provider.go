@@ -3,19 +3,21 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
-	"time"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_client"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_config"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/kube_plugins"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwdiag"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwlog"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_authenticator"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwdiag"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
+	"k8s.io/client-go/rest"
 )
 
 var providerAuthTyp = &ProviderAuthType{}
@@ -46,7 +48,7 @@ func Provider(version string, commit string) func() *schema.Provider {
 
 type ProviderModel struct {
 	Version string
-	Client  *bluechip_client.Client
+	Client  *bluechip.BluechipClient
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, providerVersion string) (interface{}, diag.Diagnostics) {
@@ -57,17 +59,23 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, providerVers
 	tflog.Debug(ctx, "Read Provider Config", fwlog.Field("config", config))
 
 	// Validate the auth configuration values
-	baseClient := &http.Client{Transport: logging.NewLoggingHTTPTransport(http.DefaultTransport)}
-	authClient := bluechip_authenticator.NewClient(baseClient, providerVersion, config.Address)
-	token, diags := initializeBluechipToken(ctx, authClient, config)
+	arcaneNonAuthClient, err := initializeArcaneClient(ctx, config.Address, nil)
+	if err != nil {
+		return nil, diag.FromErr(fmt.Errorf("failed to initialize the provider's auth client: %v", err))
+	}
+	token, diags := initializeBluechipToken(ctx, arcaneNonAuthClient, config)
 	if diags.HasError() {
 		tflog.Info(ctx, "Failed to Initialize BlueChip Token", fwlog.Field("diags", diags))
 		return nil, diags
 	}
 
-	client := bluechip_client.NewClient(baseClient, token, providerVersion, config.Address, 3*time.Second, 30*time.Second)
+	arcaneAuthenticatedClient, err := initializeArcaneClient(ctx, config.Address, &token)
+	if err != nil {
+		return nil, diag.FromErr(fmt.Errorf("failed to initialize the provider's client: %v", err))
+	}
+	client := bluechip.NewBluechipClient(arcaneAuthenticatedClient)
 	// WhoAmI API로 사용자 정보 검증
-	if _, err := client.Whoami(ctx); err != nil {
+	if _, err := client.Auths().Whoami(ctx); err != nil {
 		tflog.Info(ctx, "Failed to validate the provider's auth configuration values", fwlog.Field("error", err))
 		return nil, diag.FromErr(fmt.Errorf("failed to validate the provider's auth configuration values: %v", err))
 	}
@@ -95,8 +103,25 @@ func expandProviderConfig(ctx context.Context, d *schema.ResourceData) (*Provide
 	return &config, nil
 }
 
-func initializeBluechipToken(ctx context.Context, authClient *bluechip_authenticator.Client, config *ProviderConfig) (string, diag.Diagnostics) {
+func initializeArcaneClient(ctx context.Context, server string, token *string) (*api_client.ArcaneRestClient, diag.Diagnostics) {
+	authRestConfig, err := api_config.SimpleConfig(server)
+	if err != nil {
+		return nil, diag.FromErr(fmt.Errorf("failed to parse the provider's auth configuration values: %v", err))
+	}
+	if token != nil {
+		authRestConfig.BearerToken = *token
+	}
+
+	restClient, err := rest.RESTClientFor(authRestConfig)
+	if err != nil {
+		return nil, diag.FromErr(fmt.Errorf("failed to create REST client: %v", err))
+	}
+	return api_client.NewArcaneRestClient(restClient), nil
+}
+
+func initializeBluechipToken(ctx context.Context, nonAuthClient *api_client.ArcaneRestClient, config *ProviderConfig) (string, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	bluechipClient := bluechip.NewBluechipClient(nonAuthClient)
 
 	for index, authConfig := range config.Auths.Items {
 		if tokenAuth, ok := authConfig.(*TokenAuth); ok {
@@ -104,39 +129,53 @@ func initializeBluechipToken(ctx context.Context, authClient *bluechip_authentic
 				return tokenAuth.Token, nil
 			}
 		} else if basicAuth, ok := authConfig.(*BasicAuth); ok {
-			token, err := authClient.LoginWithBasic(context.Background(), basicAuth.Username, basicAuth.Password)
+			lr, err := kube_plugins.LoginByBasicAuth(ctx, nonAuthClient, basicAuth.Username, basicAuth.Password)
 			if err != nil {
 				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.basic", index)...)
 				continue
 			}
-			return token, nil
+			return lr.Token, nil
 		} else if awsAuth, ok := authConfig.(*AwsAuth); ok {
 			var clusterName string
 			if awsAuth.ClusterName == "" {
-				awsConfig, err := authClient.GetAwsConfiguration(ctx)
+				bluechipAwsConfig, err := bluechipClient.Auths().GetAwsConfiguration(ctx)
 				if err != nil {
 					diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.aws", index)...)
 					continue
 				}
-				clusterName = awsConfig.ValidClusterNames[0]
+				clusterName = bluechipAwsConfig.ValidClusterNames[0]
 			} else {
 				clusterName = awsAuth.ClusterName
 			}
 
-			awsOptions := &bluechip_authenticator.AwsOptions{
-				ClusterName:     clusterName,
-				AccessKey:       awsAuth.AccessKey,
-				SecretAccessKey: awsAuth.SecretAccessKey,
-				SessionToken:    awsAuth.SessionToken,
-				Region:          awsAuth.Region,
-				Profile:         awsAuth.Profile,
+			var configLoadOptions []func(*awsConfig.LoadOptions) error
+			if awsAuth.AccessKey != "" && awsAuth.SecretAccessKey != "" {
+				configLoadOptions = append(configLoadOptions, awsConfig.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(awsAuth.AccessKey, awsAuth.SecretAccessKey, awsAuth.SessionToken)))
+				tflog.Debug(ctx, "Using static credentials from provider parameters")
 			}
-			token, err := authClient.LoginWithAws(ctx, awsOptions)
+			if awsAuth.Region != "" {
+				configLoadOptions = append(configLoadOptions, awsConfig.WithRegion(awsAuth.Region))
+				tflog.Debug(ctx, "Using region from provider parameters")
+			}
+			if awsAuth.Profile != "" {
+				configLoadOptions = append(configLoadOptions, awsConfig.WithSharedConfigProfile(awsAuth.Profile))
+				tflog.Debug(ctx, "Using profile from provider parameters")
+			}
+
+			cfg, err := awsConfig.LoadDefaultConfig(ctx, configLoadOptions...)
+			if err != nil {
+				return "", diag.FromErr(err)
+			}
+			if cfg.Region == "" {
+				return "", diag.Errorf("cannot determine region from provider parameters or aws config")
+			}
+
+			lr, err := kube_plugins.LoginByAwsConfig(ctx, nonAuthClient, clusterName, cfg)
 			if err != nil {
 				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.aws", index)...)
 				continue
 			}
-			return token, nil
+			return lr.Token, nil
 		} else if oidcAuth, ok := authConfig.(*OidcAuth); ok {
 			var oidcToken string
 			if oidcAuth.TokenEnv != nil {
@@ -150,12 +189,12 @@ func initializeBluechipToken(ctx context.Context, authClient *bluechip_authentic
 				continue
 			}
 
-			token, err := authClient.LoginWithOidc(ctx, oidcToken, oidcAuth.ValidatorName)
+			lr, err := kube_plugins.LoginByOidcAuth(ctx, nonAuthClient, oidcAuth.ValidatorName, oidcToken)
 			if err != nil {
 				diags = append(diags, fwdiag.FromErrF(err, "Login Failed, path: auth_flow.%d.oidc", index)...)
 				continue
 			}
-			return token, nil
+			return lr.Token, nil
 		}
 	}
 	if len(diags) > 0 {

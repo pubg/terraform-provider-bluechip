@@ -3,10 +3,10 @@ package provider
 import (
 	"context"
 
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 var _ fwtype.TypeHelper[ProviderAuths] = &ProviderAuthType{}

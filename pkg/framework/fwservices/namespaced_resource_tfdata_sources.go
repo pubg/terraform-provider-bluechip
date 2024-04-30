@@ -4,25 +4,34 @@ import (
 	"context"
 	"time"
 
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_client"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_meta"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwbuilder"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
-type NamespacedTerraformDataSources[T bluechip_models.NamespacedApiResource[P], P bluechip_models.BaseSpec] struct {
+type NamespacedTerraformDataSources[T api_meta.NamespacedApiResource, S any] struct {
 	Timeout time.Duration
-	Gvk     bluechip_models.GroupVersionKind
+	Gvk     api_meta.ExtendedGroupVersionKind
 
-	FilterType   fwtype.FilterType
-	MetadataType fwtype.TypeHelper[bluechip_models.Metadata]
-	SpecType     fwtype.TypeHelper[P]
+	FilterType       fwtype.FilterType
+	MetadataType     fwtype.TypeHelper[api_meta.Metadata]
+	SpecType         fwtype.TypeHelper[S]
+	DebuilderFactory fwbuilder.ResourceDebuilderFactory[T]
 }
 
-func (r *NamespacedTerraformDataSources[T, P]) Resource() *schema.Resource {
+func (r *NamespacedTerraformDataSources[T, S]) Resource() *schema.Resource {
+	resourceSchema := map[string]*schema.Schema{
+		"metadata": r.MetadataType.Schema(),
+	}
+	if specSchema := r.SpecType.Schema(); specSchema != nil {
+		resourceSchema["spec"] = specSchema
+	}
+
 	outerSchema := map[string]*schema.Schema{
 		"filter": r.FilterType.Schema(),
 		"namespace": {
@@ -35,10 +44,7 @@ func (r *NamespacedTerraformDataSources[T, P]) Resource() *schema.Resource {
 			Description: "Filter is a list of query terms to filter the results by.",
 			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"metadata": r.MetadataType.Schema(),
-					"spec":     r.SpecType.Schema(),
-				},
+				Schema:      resourceSchema,
 				Description: "Filter is a list of query terms to filter the results by.",
 			},
 		},
@@ -55,7 +61,7 @@ func (r *NamespacedTerraformDataSources[T, P]) Resource() *schema.Resource {
 	}
 }
 
-func (r *NamespacedTerraformDataSources[T, P]) Read(ctx context.Context, d *schema.ResourceData, client *bluechip_client.NamespacedResourceClient[T, P]) diag.Diagnostics {
+func (r *NamespacedTerraformDataSources[T, S]) Read(ctx context.Context, d *schema.ResourceData, client *api_client.ArcaneNamespacedResourceClient[T]) diag.Diagnostics {
 	var filter fwtype.FilterValue
 	if diags := r.FilterType.Expand(ctx, d, &filter); diags.HasError() {
 		return diags
@@ -75,10 +81,14 @@ func (r *NamespacedTerraformDataSources[T, P]) Read(ctx context.Context, d *sche
 
 	var itemsAttr []map[string]any
 	for _, object := range objects {
-		metadataAttr := r.MetadataType.Flatten(object.GetMetadata())
-		specAttr := r.SpecType.Flatten(object.GetSpec())
+		debuilder := r.DebuilderFactory.New(object)
 
+		metadata := debuilder.Get(fwbuilder.FieldMetadata).(api_meta.Metadata)
+		metadataAttr := r.MetadataType.Flatten(metadata)
 		itemAttr := map[string]any{"metadata": []any{metadataAttr}}
+
+		spec := debuilder.Get(fwbuilder.FieldSpec).(S)
+		specAttr := r.SpecType.Flatten(spec)
 		if specAttr != nil {
 			itemAttr["spec"] = []any{specAttr}
 		}
@@ -98,7 +108,7 @@ func (r *NamespacedTerraformDataSources[T, P]) Read(ctx context.Context, d *sche
 	return nil
 }
 
-func (r *NamespacedTerraformDataSources[T, P]) listRequest(ctx context.Context, client *bluechip_client.NamespacedResourceClient[T, P], namespace string, queryTerms []bluechip_models.QueryTerm) ([]T, error) {
+func (r *NamespacedTerraformDataSources[T, S]) listRequest(ctx context.Context, client *api_client.ArcaneNamespacedResourceClient[T], namespace string, queryTerms []api_meta.QueryTerm) ([]T, error) {
 	if len(queryTerms) == 0 {
 		return client.List(ctx, namespace)
 	} else {
@@ -106,7 +116,7 @@ func (r *NamespacedTerraformDataSources[T, P]) listRequest(ctx context.Context, 
 	}
 }
 
-func (r *NamespacedTerraformDataSources[T, P]) namespacedClient(meta interface{}) *bluechip_client.NamespacedResourceClient[T, P] {
+func (r *NamespacedTerraformDataSources[T, S]) namespacedClient(meta interface{}) *api_client.ArcaneNamespacedResourceClient[T] {
 	model := meta.(*provider.ProviderModel)
-	return bluechip_client.NewNamespacedClient[T, P](model.Client, r.Gvk)
+	return api_client.NewNamespacedResourceClient[T](model.Client.GetArcaneClient(), r.Gvk, model.Client.GetBasePath())
 }

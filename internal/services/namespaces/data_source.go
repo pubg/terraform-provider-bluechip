@@ -3,16 +3,17 @@ package namespaces
 import (
 	"time"
 
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwservices"
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwservices"
 )
 
 func NewDataSource() fwservices.ResourceFactory {
-	return &fwservices.ClusterTerraformDataSource[bluechip_models.Namespace, bluechip_models.EmptySpec]{
-		Gvk:     bluechip_models.NamespaceGvk,
+	return &fwservices.ClusterTerraformDataSource[bluechip.Namespace, EmptySpec]{
+		Gvk:     bluechip.NamespaceGvk,
 		Timeout: 30 * time.Second,
 
-		MetadataType: fwservices.ClusterDataSourceMetadataType,
-		SpecType:     &SpecType{},
+		MetadataType:     fwservices.ClusterDataSourceMetadataType,
+		SpecType:         &SpecType{},
+		DebuilderFactory: &DebuilderFactory{},
 	}
 }

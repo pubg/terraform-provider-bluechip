@@ -3,11 +3,11 @@ package oidcauths
 import (
 	"context"
 
+	"git.projectbro.com/Devops/arcane-client-go/bluechip"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwflex"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwflex"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
 type SpecType struct {
@@ -85,7 +85,7 @@ func (t SpecType) Schema() *schema.Schema {
 	return blockSchema
 }
 
-func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip_models.OidcAuthSpec) diag.Diagnostics {
+func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluechip.OidcAuthSpec) diag.Diagnostics {
 	attr := d.Get("spec.0").(map[string]any)
 	out.UsernameClaim = attr["username_claim"].(string)
 	if attr["username_prefix"] != nil {
@@ -104,7 +104,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	}
 	if attr["attribute_mapping"] != nil {
 		for _, rawAttributeMapping := range fwflex.ExpandMapList(attr["attribute_mapping"].([]any)) {
-			mapping := bluechip_models.AttributeMapping{
+			mapping := bluechip.AttributeMapping{
 				From: rawAttributeMapping["from"].(string),
 				To:   rawAttributeMapping["to"].(string),
 			}
@@ -117,7 +117,7 @@ func (t SpecType) Expand(ctx context.Context, d *schema.ResourceData, out *bluec
 	return nil
 }
 
-func (t SpecType) Flatten(in bluechip_models.OidcAuthSpec) map[string]any {
+func (t SpecType) Flatten(in bluechip.OidcAuthSpec) map[string]any {
 	attr := map[string]any{
 		"username_claim":  in.UsernameClaim,
 		"username_prefix": in.UsernamePrefix,

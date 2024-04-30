@@ -4,28 +4,29 @@ import (
 	"context"
 	"time"
 
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_client"
+	"git.projectbro.com/Devops/arcane-client-go/pkg/api_meta"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/internal/provider"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwbuilder"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwlog"
+	"git.projectbro.com/Devops/terraform-provider-bluechip/pkg/framework/fwtype"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pubg/terraform-provider-bluechip/internal/provider"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client"
-	"github.com/pubg/terraform-provider-bluechip/pkg/bluechip_client/bluechip_models"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwlog"
-	"github.com/pubg/terraform-provider-bluechip/pkg/framework/fwtype"
 )
 
-type NamespacedTerraformResource[T bluechip_models.NamespacedApiResource[P], P bluechip_models.BaseSpec] struct {
-	Schema      map[string]*schema.Schema
-	Timeout     time.Duration
-	Gvk         bluechip_models.GroupVersionKind
-	Constructor func() T
+type NamespacedTerraformResource[T api_meta.NamespacedApiResource, S any] struct {
+	Timeout time.Duration
+	Gvk     api_meta.ExtendedGroupVersionKind
 
-	MetadataType fwtype.TypeHelper[bluechip_models.Metadata]
-	SpecType     fwtype.TypeHelper[P]
+	MetadataType     fwtype.TypeHelper[api_meta.Metadata]
+	SpecType         fwtype.TypeHelper[S]
+	DebuilderFactory fwbuilder.ResourceDebuilderFactory[T]
+	BuilderFactory   fwbuilder.ResourceBuilderFactory[T]
 }
 
-func (r *NamespacedTerraformResource[T, P]) Resource() *schema.Resource {
+func (r *NamespacedTerraformResource[T, S]) Resource() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"metadata": r.MetadataType.Schema(),
@@ -52,10 +53,10 @@ func (r *NamespacedTerraformResource[T, P]) Resource() *schema.Resource {
 	}
 }
 
-func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schema.ResourceData, client *bluechip_client.NamespacedResourceClient[T, P]) diag.Diagnostics {
+func (r *NamespacedTerraformResource[T, S]) Upsert(ctx context.Context, d *schema.ResourceData, client *api_client.ArcaneNamespacedResourceClient[T]) diag.Diagnostics {
 	ctx = tflog.SetField(ctx, "gvk", r.Gvk)
 
-	var metadata bluechip_models.Metadata
+	var metadata api_meta.Metadata
 	if diags := r.MetadataType.Expand(ctx, d, &metadata); diags.HasError() {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -67,7 +68,7 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 		return diags
 	}
 
-	var spec P
+	var spec S
 	if diags := r.SpecType.Expand(ctx, d, &spec); diags.HasError() {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -79,13 +80,23 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 		return diags
 	}
 
-	object := r.Constructor()
 	typeMeta := r.Gvk.ToTypeMeta()
-	object.SetApiVersion(typeMeta.GetApiVersion())
-	object.SetKind(typeMeta.GetKind())
-	object.SetMetadata(metadata)
-	object.SetSpec(spec)
-	if err := client.Upsert(ctx, metadata.Namespace, object); err != nil {
+	builder := r.BuilderFactory.New()
+	if err := builder.Set(fwbuilder.FieldApiVersion, typeMeta.GetApiVersion()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := builder.Set(fwbuilder.FieldKind, typeMeta.GetKind()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := builder.Set(fwbuilder.FieldMetadata, metadata); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := builder.Set(fwbuilder.FieldSpec, spec); err != nil {
+		return diag.FromErr(err)
+	}
+
+	object := builder.Build()
+	if err := client.Upsert(ctx, object); err != nil {
 		diags := append(diag.FromErr(err), diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Upsert Request Failed",
@@ -99,7 +110,7 @@ func (r *NamespacedTerraformResource[T, P]) Upsert(ctx context.Context, d *schem
 	return r.Read(ctx, d, client)
 }
 
-func (r *NamespacedTerraformResource[T, P]) Read(ctx context.Context, d *schema.ResourceData, client *bluechip_client.NamespacedResourceClient[T, P]) diag.Diagnostics {
+func (r *NamespacedTerraformResource[T, S]) Read(ctx context.Context, d *schema.ResourceData, client *api_client.ArcaneNamespacedResourceClient[T]) diag.Diagnostics {
 	namespace, name := NamespacedResourceIdentityFrom(d.Id())
 	object, err := client.Get(ctx, namespace, name)
 	if err != nil {
@@ -112,17 +123,21 @@ func (r *NamespacedTerraformResource[T, P]) Read(ctx context.Context, d *schema.
 		return diags
 	}
 
-	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(object.GetMetadata())); diags.HasError() {
+	debuilder := r.DebuilderFactory.New(object)
+
+	metadata := debuilder.Get(fwbuilder.FieldMetadata).(api_meta.Metadata)
+	if diags := fwtype.SetBlock(d, "metadata", r.MetadataType.Flatten(metadata)); diags.HasError() {
 		return diags
 	}
-	if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(object.GetSpec())); diags.HasError() {
+	spec := debuilder.Get(fwbuilder.FieldSpec).(S)
+	if diags := fwtype.SetBlock(d, "spec", r.SpecType.Flatten(spec)); diags.HasError() {
 		return diags
 	}
 
 	return nil
 }
 
-func (r *NamespacedTerraformResource[T, P]) Delete(ctx context.Context, d *schema.ResourceData, client *bluechip_client.NamespacedResourceClient[T, P]) diag.Diagnostics {
+func (r *NamespacedTerraformResource[T, S]) Delete(ctx context.Context, d *schema.ResourceData, client *api_client.ArcaneNamespacedResourceClient[T]) diag.Diagnostics {
 	namespace, name := NamespacedResourceIdentityFrom(d.Id())
 
 	if err := client.Delete(ctx, namespace, name); err != nil {
@@ -137,7 +152,7 @@ func (r *NamespacedTerraformResource[T, P]) Delete(ctx context.Context, d *schem
 	return nil
 }
 
-func (r *NamespacedTerraformResource[T, P]) namespacedClient(meta interface{}) *bluechip_client.NamespacedResourceClient[T, P] {
+func (r *NamespacedTerraformResource[T, S]) namespacedClient(meta interface{}) *api_client.ArcaneNamespacedResourceClient[T] {
 	model := meta.(*provider.ProviderModel)
-	return bluechip_client.NewNamespacedClient[T, P](model.Client, r.Gvk)
+	return api_client.NewNamespacedResourceClient[T](model.Client.GetArcaneClient(), r.Gvk, model.Client.GetBasePath())
 }

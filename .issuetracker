@@ -16,5 +16,5 @@
 
 [issuetracker "Krafton GitHub Enterprise Rule"]
   regex = "#(\\d+)"
-  url = "https://github.com/pubg/terraform-provider-bluechip/issues/$1"
+  url = "https://git.projectbro.com/Devops/terraform-provider-bluechip/issues/$1"
 
