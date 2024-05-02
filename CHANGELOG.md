@@ -1,2 +1,2 @@
 ## Changelog   
-* 2d360f5 fix: publish script
+* 6ba6d09 fix: Update invalid code
