@@ -1,2 +1,2 @@
 ## Changelog   
-* d7a766d fix: login flow
+* 186450b feat: Bump arcane-client-go to 1.2.5
