@@ -1,2 +1,2 @@
 ## Changelog   
-* 35196aa fix: Update make as latest
+* 11e0869 fix: Update arcane-client-go to fix misconfigured struct
