@@ -102,14 +102,11 @@ Optional:
 <a id="nestedblock--auth_flow--oidc"></a>
 ### Nested Schema for `auth_flow.oidc`
 
-Required:
-
-- `validator_name` (String)
-
 Optional:
 
 - `token` (String)
 - `token_env` (String)
+- `validator_name` (String)
 
 
 <a id="nestedblock--auth_flow--token"></a>
