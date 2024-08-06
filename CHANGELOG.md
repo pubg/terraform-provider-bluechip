@@ -1,2 +1,2 @@
 ## Changelog   
-* 62bc57c fix: Link new resource
+* 0d8e089 fix: [PUBG-214031] make name and namespace to forceNew
