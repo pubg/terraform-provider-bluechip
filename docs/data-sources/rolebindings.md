@@ -76,6 +76,7 @@ Read-Only:
 - `labels` (Map of String)
 - `name` (String)
 - `namespace` (String)
+- `resource_version` (String)
 - `update_timestamp` (String)
 
 

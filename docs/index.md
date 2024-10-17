@@ -72,10 +72,11 @@ provider "bluechip" {
 
 Optional:
 
-- `aws` (Block List, Max: 1) Only one of token, basic, aws, oidc can be specified. (see [below for nested schema](#nestedblock--auth_flow--aws))
-- `basic` (Block List, Max: 1) Only one of token, basic, aws, oidc can be specified. (see [below for nested schema](#nestedblock--auth_flow--basic))
-- `oidc` (Block List, Max: 1) Only one of token, basic, aws, oidc can be specified. (see [below for nested schema](#nestedblock--auth_flow--oidc))
-- `token` (Block List, Max: 1) Only one of token, basic, aws, oidc can be specified. (see [below for nested schema](#nestedblock--auth_flow--token))
+- `aws` (Block List, Max: 1) Only one of token, basic, aws, oidc, exec can be specified. (see [below for nested schema](#nestedblock--auth_flow--aws))
+- `basic` (Block List, Max: 1) Only one of token, basic, aws, oidc, exec can be specified. (see [below for nested schema](#nestedblock--auth_flow--basic))
+- `exec` (Block List, Max: 1) Only one of token, basic, aws, oidc, exec can be specified. (see [below for nested schema](#nestedblock--auth_flow--exec))
+- `oidc` (Block List, Max: 1) Only one of token, basic, aws, oidc, exec can be specified. (see [below for nested schema](#nestedblock--auth_flow--oidc))
+- `token` (Block List, Max: 1) Only one of token, basic, aws, oidc, exec can be specified. (see [below for nested schema](#nestedblock--auth_flow--token))
 
 <a id="nestedblock--auth_flow--aws"></a>
 ### Nested Schema for `auth_flow.aws`
@@ -97,6 +98,19 @@ Optional:
 
 - `password` (String)
 - `username` (String)
+
+
+<a id="nestedblock--auth_flow--exec"></a>
+### Nested Schema for `auth_flow.exec`
+
+Required:
+
+- `auth_method` (String)
+- `cmd` (String)
+
+Optional:
+
+- `path` (String)
 
 
 <a id="nestedblock--auth_flow--oidc"></a>

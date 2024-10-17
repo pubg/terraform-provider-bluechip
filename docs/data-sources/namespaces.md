@@ -64,4 +64,5 @@ Read-Only:
 - `creation_timestamp` (String)
 - `labels` (Map of String)
 - `name` (String)
+- `resource_version` (String)
 - `update_timestamp` (String)
