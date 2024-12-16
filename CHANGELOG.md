@@ -1,2 +1,2 @@
 ## Changelog   
-* 1730bd5 feat: 자체 tf framework 리팩토링 (!6)
+* b82c674 feat: Pubg Catalog 리소스 추가

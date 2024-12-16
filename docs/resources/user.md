@@ -65,7 +65,7 @@ Read-Only:
 Required:
 
 - `attributes` (Map of String)
-- `password` (String)
+- `password` (String, Sensitive)
 
 Optional:
 

@@ -88,6 +88,7 @@ Read-Only:
 - `app` (String)
 - `branch` (String)
 - `commit_hash` (String)
+- `digest` (String)
 - `repository` (String)
 - `tag` (String)
 - `timestamp` (Number)

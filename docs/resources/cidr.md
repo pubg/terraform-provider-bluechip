@@ -40,6 +40,8 @@ resource "bluechip_cidr" "current" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `ipv4_cidrs` (List of String)
+- `ipv6_cidrs` (List of String)
 
 <a id="nestedblock--metadata"></a>
 ### Nested Schema for `metadata`

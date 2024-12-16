@@ -32,6 +32,8 @@ data "bluechip_cidr" "current" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `ipv4_cidrs` (List of String)
+- `ipv6_cidrs` (List of String)
 - `spec` (List of Object) (see [below for nested schema](#nestedatt--spec))
 
 <a id="nestedblock--metadata"></a>
