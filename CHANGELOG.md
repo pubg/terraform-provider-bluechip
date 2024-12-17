@@ -1,2 +1,2 @@
 ## Changelog   
-* b82c674 feat: Pubg Catalog 리소스 추가
+* f28c3a3 fix: branch info 추가
