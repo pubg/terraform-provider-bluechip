@@ -1,2 +1,2 @@
 ## Changelog   
-* ae19c54 feat: [PUBG-234036] arcane-client 버전 업데이트 (!7)
+* 4ef3b1f fix: Bump client-go version for fix bug when generate apiVersion
