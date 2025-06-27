@@ -55,7 +55,7 @@ Read-Only:
 
 - `metadata` (List of Object) (see [below for nested schema](#nestedobjatt--items--metadata))
 - `role_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--role_ref))
-- `subject_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--subject_ref))
+- `subjects` (List of Object) (see [below for nested schema](#nestedobjatt--items--subjects))
 
 <a id="nestedobjatt--items--metadata"></a>
 ### Nested Schema for `items.metadata`
@@ -79,8 +79,8 @@ Read-Only:
 - `name` (String)
 
 
-<a id="nestedobjatt--items--subject_ref"></a>
-### Nested Schema for `items.subject_ref`
+<a id="nestedobjatt--items--subjects"></a>
+### Nested Schema for `items.subjects`
 
 Read-Only:
 

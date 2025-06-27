@@ -32,7 +32,7 @@ data "bluechip_clusterrolebinding" "current" {
 
 - `id` (String) The ID of this resource.
 - `role_ref` (List of Object) RoleRef is a reference to the role. (see [below for nested schema](#nestedatt--role_ref))
-- `subject_ref` (List of Object) SubjectRef is a reference to the subject of the role. (see [below for nested schema](#nestedatt--subject_ref))
+- `subjects` (List of Object) Subjects is a reference to the subject of the role. (see [below for nested schema](#nestedatt--subjects))
 
 <a id="nestedblock--metadata"></a>
 ### Nested Schema for `metadata`
@@ -70,8 +70,8 @@ Read-Only:
 - `name` (String)
 
 
-<a id="nestedatt--subject_ref"></a>
-### Nested Schema for `subject_ref`
+<a id="nestedatt--subjects"></a>
+### Nested Schema for `subjects`
 
 Read-Only:
 

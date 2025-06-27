@@ -39,7 +39,7 @@ resource "bluechip_rolebinding" "current" {
 
 - `metadata` (Block List, Min: 1) (see [below for nested schema](#nestedblock--metadata))
 - `role_ref` (Block List, Min: 1, Max: 1) RoleRef is a reference to the role. (see [below for nested schema](#nestedblock--role_ref))
-- `subject_ref` (Block List, Min: 1) SubjectRef is a reference to the subject of the role. (see [below for nested schema](#nestedblock--subject_ref))
+- `subjects` (Block List, Min: 1) Subjects is a reference to the subject of the role. (see [below for nested schema](#nestedblock--subjects))
 
 ### Optional
 
@@ -78,8 +78,8 @@ Required:
 - `name` (String) Name of the referent.
 
 
-<a id="nestedblock--subject_ref"></a>
-### Nested Schema for `subject_ref`
+<a id="nestedblock--subjects"></a>
+### Nested Schema for `subjects`
 
 Required:
 
