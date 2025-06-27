@@ -31,7 +31,7 @@ data "bluechip_role" "current" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `spec` (List of Object) (see [below for nested schema](#nestedatt--spec))
+- `rules` (List of Object) Rules holds all the PolicyRules for this Role. (see [below for nested schema](#nestedatt--rules))
 
 <a id="nestedblock--metadata"></a>
 ### Nested Schema for `metadata`
@@ -39,6 +39,7 @@ data "bluechip_role" "current" {
 Required:
 
 - `name` (String) Name is the name of the resource.
+- `namespace` (String) Namespace is the namespace of the resource.
 
 Optional:
 
@@ -60,26 +61,13 @@ Optional:
 - `default` (String)
 
 
-<a id="nestedatt--spec"></a>
-### Nested Schema for `spec`
+<a id="nestedatt--rules"></a>
+### Nested Schema for `rules`
 
 Read-Only:
 
-- `statements` (List of Object) (see [below for nested schema](#nestedobjatt--spec--statements))
-
-<a id="nestedobjatt--spec--statements"></a>
-### Nested Schema for `spec.statements`
-
-Read-Only:
-
-- `actions` (Set of String)
-- `paths` (Set of String)
-- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--spec--statements--resources))
-
-<a id="nestedobjatt--spec--statements--resources"></a>
-### Nested Schema for `spec.statements.resources`
-
-Read-Only:
-
-- `api_group` (String)
-- `kind` (String)
+- `api_groups` (List of String)
+- `non_resource_urls` (List of String)
+- `resource_names` (List of String)
+- `resources` (List of String)
+- `verbs` (List of String)

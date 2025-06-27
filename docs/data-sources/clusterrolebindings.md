@@ -54,7 +54,8 @@ Optional:
 Read-Only:
 
 - `metadata` (List of Object) (see [below for nested schema](#nestedobjatt--items--metadata))
-- `spec` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec))
+- `role_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--role_ref))
+- `subject_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--subject_ref))
 
 <a id="nestedobjatt--items--metadata"></a>
 ### Nested Schema for `items.metadata`
@@ -69,26 +70,20 @@ Read-Only:
 - `update_timestamp` (String)
 
 
-<a id="nestedobjatt--items--spec"></a>
-### Nested Schema for `items.spec`
-
-Read-Only:
-
-- `role_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--role_ref))
-- `subject_ref` (List of Object) (see [below for nested schema](#nestedobjatt--items--spec--subject_ref))
-
-<a id="nestedobjatt--items--spec--role_ref"></a>
-### Nested Schema for `items.spec.role_ref`
-
-Read-Only:
-
-- `name` (String)
-
-
-<a id="nestedobjatt--items--spec--subject_ref"></a>
-### Nested Schema for `items.spec.subject_ref`
+<a id="nestedobjatt--items--role_ref"></a>
+### Nested Schema for `items.role_ref`
 
 Read-Only:
 
 - `kind` (String)
 - `name` (String)
+
+
+<a id="nestedobjatt--items--subject_ref"></a>
+### Nested Schema for `items.subject_ref`
+
+Read-Only:
+
+- `kind` (String)
+- `name` (String)
+- `user_source` (String)

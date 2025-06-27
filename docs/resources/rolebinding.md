@@ -15,15 +15,19 @@ description: |-
 ```terraform
 resource "bluechip_rolebinding" "current" {
   metadata {
-    name      = "my-test"
+    name      = "my-test-binding"
     namespace = "default"
   }
-  spec {
-    subject_ref {
-      kind = "User"
-      name = "my-test"
-    }
-    policy_ref = "admin"
+
+  subjects {
+    user_source = "bluechip"
+    kind        = "User"
+    name        = "test-user"
+  }
+
+  role_ref {
+    kind = "Role"
+    name = "developer"
   }
 }
 ```
@@ -34,7 +38,8 @@ resource "bluechip_rolebinding" "current" {
 ### Required
 
 - `metadata` (Block List, Min: 1) (see [below for nested schema](#nestedblock--metadata))
-- `spec` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec))
+- `role_ref` (Block List, Min: 1, Max: 1) RoleRef is a reference to the role. (see [below for nested schema](#nestedblock--role_ref))
+- `subject_ref` (Block List, Min: 1) SubjectRef is a reference to the subject of the role. (see [below for nested schema](#nestedblock--subject_ref))
 
 ### Optional
 
@@ -64,30 +69,23 @@ Read-Only:
 - `update_timestamp` (String) UpdateTimestamp is a timestamp representing the server time when this object was last updated.
 
 
-<a id="nestedblock--spec"></a>
-### Nested Schema for `spec`
+<a id="nestedblock--role_ref"></a>
+### Nested Schema for `role_ref`
 
 Required:
 
-- `role_ref` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--role_ref))
-- `subject_ref` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--subject_ref))
-
-<a id="nestedblock--spec--role_ref"></a>
-### Nested Schema for `spec.role_ref`
-
-Required:
-
+- `kind` (String) Kind of the referent. Valid kinds are 'Role', 'ClusterRole'.
 - `name` (String) Name of the referent.
 
 
-<a id="nestedblock--spec--subject_ref"></a>
-### Nested Schema for `spec.subject_ref`
+<a id="nestedblock--subject_ref"></a>
+### Nested Schema for `subject_ref`
 
 Required:
 
 - `kind` (String) Kind of the referent. Valid kinds are 'User', 'Group'.
 - `name` (String) Name of the referent.
-
+- `user_source` (String) UserSource is the source of the user.
 
 
 <a id="nestedblock--timeouts"></a>

@@ -1,2 +1,2 @@
 ## Changelog   
-* 4ef3b1f fix: Bump client-go version for fix bug when generate apiVersion
+* 172845e feat: [PUBG-241726] rbac 리소스를 arcane-auth에 맞게 업데이트 (!8)

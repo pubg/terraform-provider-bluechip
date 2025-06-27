@@ -84,9 +84,19 @@ Read-Only:
 
 Required:
 
+- `branch_info` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--branch_info))
 - `deploy_info` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--deploy_info))
 - `type` (String) The type of the resource. Valid values are: broserv, sprout, subprojecct
 - `workload_type` (String)
+
+<a id="nestedblock--spec--branch_info"></a>
+### Nested Schema for `spec.branch_info`
+
+Required:
+
+- `default` (Boolean)
+- `role` (String)
+
 
 <a id="nestedblock--spec--deploy_info"></a>
 ### Nested Schema for `spec.deploy_info`

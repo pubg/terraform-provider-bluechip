@@ -22,14 +22,32 @@ data "bluechip_whoami" "current" {
 
 ### Optional
 
+- `metadata` (Block List) (see [below for nested schema](#nestedblock--metadata))
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
-- `attributes` (Map of String)
-- `groups` (Set of String)
 - `id` (String) The ID of this resource.
-- `name` (String)
+- `status` (List of Object) (see [below for nested schema](#nestedatt--status))
+
+<a id="nestedblock--metadata"></a>
+### Nested Schema for `metadata`
+
+Required:
+
+- `name` (String) Name is the name of the resource.
+
+Optional:
+
+- `annotations` (Map of String) Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects.
+- `labels` (Map of String) Labels are key value pairs that may be used to scope and select individual resources. They are not queryable and should be preserved when modifying objects.
+
+Read-Only:
+
+- `creation_timestamp` (String) CreationTimestamp is a timestamp representing the server time when this object was created.
+- `resource_version` (String) ResourceVersion is an opaque value that changes on every update to a resource.
+- `update_timestamp` (String) UpdateTimestamp is a timestamp representing the server time when this object was last updated.
+
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -37,3 +55,14 @@ data "bluechip_whoami" "current" {
 Optional:
 
 - `default` (String)
+
+
+<a id="nestedatt--status"></a>
+### Nested Schema for `status`
+
+Read-Only:
+
+- `extra` (Map of String)
+- `groups` (Set of String)
+- `user_source` (String)
+- `username` (String)

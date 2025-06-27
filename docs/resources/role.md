@@ -15,13 +15,17 @@ description: |-
 ```terraform
 resource "bluechip_role" "current" {
   metadata {
-    name = "my-test"
-  }
-  spec {
-    statements {
-      actions = ["read"]
-      paths = ["/**"]
+    name      = "my-test-role"
+    namespace = "default"
+    labels = {
+      "app" = "test"
     }
+  }
+
+  rules {
+    api_groups = [""]
+    resources  = ["pods", "services"]
+    verbs      = ["get", "list", "watch"]
   }
 }
 ```
@@ -32,7 +36,7 @@ resource "bluechip_role" "current" {
 ### Required
 
 - `metadata` (Block List, Min: 1) (see [below for nested schema](#nestedblock--metadata))
-- `spec` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec))
+- `rules` (Block List, Min: 1) Rules holds all the PolicyRules for this Role. (see [below for nested schema](#nestedblock--rules))
 
 ### Optional
 
@@ -48,6 +52,7 @@ resource "bluechip_role" "current" {
 Required:
 
 - `name` (String) Name is the name of the resource.
+- `namespace` (String) Namespace is the namespace of the resource.
 
 Optional:
 
@@ -61,34 +66,19 @@ Read-Only:
 - `update_timestamp` (String) UpdateTimestamp is a timestamp representing the server time when this object was last updated.
 
 
-<a id="nestedblock--spec"></a>
-### Nested Schema for `spec`
+<a id="nestedblock--rules"></a>
+### Nested Schema for `rules`
 
 Required:
 
-- `statements` (Block List, Min: 1) (see [below for nested schema](#nestedblock--spec--statements))
-
-<a id="nestedblock--spec--statements"></a>
-### Nested Schema for `spec.statements`
-
-Required:
-
-- `actions` (Set of String) Actions is a list of actions this role binding grants access to.
+- `verbs` (List of String) Verbs is a list of methods this role binding grants access to.
 
 Optional:
 
-- `paths` (Set of String) Paths is a list of paths this role binding grants access to.
-- `resources` (Block List) Resources is a list of resources this role binding grants access to. (see [below for nested schema](#nestedblock--spec--statements--resources))
-
-<a id="nestedblock--spec--statements--resources"></a>
-### Nested Schema for `spec.statements.resources`
-
-Required:
-
-- `api_group` (String) APIGroup is the group for the resource being referenced.
-- `kind` (String) Kind is the type of resource being referenced.
-
-
+- `api_groups` (List of String) APIGroup is the group for the resource being referenced.
+- `non_resource_urls` (List of String) NonResourceURLs is a list of non-resource URLs this role binding grants access to.
+- `resource_names` (List of String) ResourceNames is a list of resource names this role binding grants access to.
+- `resources` (List of String) Resources is a list of resources this role binding grants access to.
 
 
 <a id="nestedblock--timeouts"></a>

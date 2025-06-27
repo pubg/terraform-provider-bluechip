@@ -58,9 +58,19 @@ Optional:
 
 Read-Only:
 
+- `branch_info` (List of Object) (see [below for nested schema](#nestedobjatt--spec--branch_info))
 - `deploy_info` (List of Object) (see [below for nested schema](#nestedobjatt--spec--deploy_info))
 - `type` (String)
 - `workload_type` (String)
+
+<a id="nestedobjatt--spec--branch_info"></a>
+### Nested Schema for `spec.branch_info`
+
+Read-Only:
+
+- `default` (Boolean)
+- `role` (String)
+
 
 <a id="nestedobjatt--spec--deploy_info"></a>
 ### Nested Schema for `spec.deploy_info`

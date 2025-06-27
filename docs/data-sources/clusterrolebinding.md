@@ -31,7 +31,8 @@ data "bluechip_clusterrolebinding" "current" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `spec` (List of Object) (see [below for nested schema](#nestedatt--spec))
+- `role_ref` (List of Object) RoleRef is a reference to the role. (see [below for nested schema](#nestedatt--role_ref))
+- `subject_ref` (List of Object) SubjectRef is a reference to the subject of the role. (see [below for nested schema](#nestedatt--subject_ref))
 
 <a id="nestedblock--metadata"></a>
 ### Nested Schema for `metadata`
@@ -60,26 +61,20 @@ Optional:
 - `default` (String)
 
 
-<a id="nestedatt--spec"></a>
-### Nested Schema for `spec`
-
-Read-Only:
-
-- `role_ref` (List of Object) (see [below for nested schema](#nestedobjatt--spec--role_ref))
-- `subject_ref` (List of Object) (see [below for nested schema](#nestedobjatt--spec--subject_ref))
-
-<a id="nestedobjatt--spec--role_ref"></a>
-### Nested Schema for `spec.role_ref`
-
-Read-Only:
-
-- `name` (String)
-
-
-<a id="nestedobjatt--spec--subject_ref"></a>
-### Nested Schema for `spec.subject_ref`
+<a id="nestedatt--role_ref"></a>
+### Nested Schema for `role_ref`
 
 Read-Only:
 
 - `kind` (String)
 - `name` (String)
+
+
+<a id="nestedatt--subject_ref"></a>
+### Nested Schema for `subject_ref`
+
+Read-Only:
+
+- `kind` (String)
+- `name` (String)
+- `user_source` (String)
