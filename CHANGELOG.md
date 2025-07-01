@@ -1,2 +1,2 @@
 ## Changelog   
-* 3470d09 fix: oidc_auth에 token_file 옵션 추가
+* d4e5102 fix: conflicts_with는 사용할 수 없어 제거
