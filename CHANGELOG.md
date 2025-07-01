@@ -1,2 +1,2 @@
 ## Changelog   
-* 1b9582c feat: subject_ref -> subjects (!9)
+* 3470d09 fix: oidc_auth에 token_file 옵션 추가
