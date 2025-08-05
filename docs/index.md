@@ -120,6 +120,7 @@ Optional:
 
 - `token` (String)
 - `token_env` (String)
+- `token_file` (String)
 - `validator_name` (String)
 
 
